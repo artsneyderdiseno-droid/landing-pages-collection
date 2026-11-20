@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        /* Intro JECA — decide ANTES del primer render si la intro se muestra (una sola vez por sesión).
+           Sin JS o con prefers-reduced-motion no se añade la clase y la intro nunca se pinta. */
+        (function () {
+            try {
+                var KEY = 'jeca_intro_played';
+                var played = false;
+                try { played = window.sessionStorage.getItem(KEY) === '1'; } catch (e) {}
+                // Cookie de sesión (sin expiración): compartida entre pestañas de la misma sesión del navegador
+                if (!played) played = document.cookie.indexOf(KEY + '=1') !== -1;
+                var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (!played && !reduce) document.documentElement.classList.add('jeca-intro');
+            } catch (e) {}
+        })();
+    </script>
+    <title>Jessica Eliana Castro Adrada | Ingeniera de Sistemas - Infraestructura TI & Cloud</title>
+    <meta name="description" content="Portafolio profesional de Jessica Eliana Castro Adrada, Ingeniera de Sistemas especializada en administración de infraestructura TI, bases de datos, cloud (AWS/Azure/GCP) y soporte técnico avanzado.">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/BVLcrx7z/eliana.png">
+    <link rel="shortcut icon" type="image/png" href="https://i.ibb.co/BVLcrx7z/eliana.png">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/BVLcrx7z/eliana.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons para iconografía moderna y minimalista -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        tech: {
+                            dark: '#050505',
+                            darker: '#0a0a0f',
+                            card: '#111116',
+                            border: '#22222a',
+                            cyan: '#00f0ff',
+                            purple: '#8a2be2',
+                            textMain: '#e2e8f0',
+                            textMuted: '#94a3b8'
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                        'tech-grid': 'linear-gradient(to right, #22222a 1px, transparent 1px), linear-gradient(to bottom, #22222a 1px, transparent 1px)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Personalización de Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #22222a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #33333f;
+        }
+
+        /* Estilos base */
+        body {
+            background-color: #050505;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Utilidad para el grid de fondo del Hero */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+        }
+
+        /* Animaciones personalizadas */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
+        /* Efecto Glow en Hover */
+        .glow-hover {
+            transition: all 0.3s ease;
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+
+        /* Respeta preferencias de sistema */
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .glow-hover {
+                transition: none !important;
+                transform: none !important;
+                opacity: 1 !important;
+            }
+        }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            transform: translateX(-50%) translateY(20px);
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ============================================
+           Menú Mobile — Hamburger, Panel y Overlay
+           ============================================ */
+
+        /* Botón hamburger: icono de 3 barras que muta a X */
+        #mobile-menu-btn {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .hamburger-icon {
+            width: 22px;
+            height: 16px;
+        }
+        .hamburger-bar {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            border-radius: 2px;
+            background-color: currentColor;
+            transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1),
+                        top 0.35s cubic-bezier(0.65, 0, 0.35, 1),
+                        opacity 0.2s ease;
+        }
+        .hamburger-bar.top { top: 0; }
+        .hamburger-bar.middle { top: 50%; transform: translateY(-50%); }
+        .hamburger-bar.bottom { bottom: 0; }
+
+        #mobile-menu-btn[aria-expanded="true"] .hamburger-bar.top {
+            top: 50%;
+            transform: translateY(-50%) rotate(45deg);
+        }
+        #mobile-menu-btn[aria-expanded="true"] .hamburger-bar.middle {
+            opacity: 0;
+        }
+        #mobile-menu-btn[aria-expanded="true"] .hamburger-bar.bottom {
+            bottom: 50%;
+            transform: translateY(50%) rotate(-45deg);
+        }
+
+        /* Overlay/backdrop detrás del panel */
+        /* IMPORTANTE: #navbar tiene backdrop-filter (backdrop-blur-md), y por spec CSS
+           cualquier elemento con backdrop-filter/filter/transform se convierte en el
+           "containing block" de sus descendientes position:fixed. Como este overlay y
+           el panel #mobile-menu viven dentro de <header>, su "inset-0"/"h-full" se
+           calculaban contra la caja del header (~80px de alto) y NO contra el viewport
+           real, dejándolos comprimidos en una franja invisible arriba de la pantalla.
+           Fijamos la altura con unidades de viewport (inmunes al containing block) para
+           que cubran la pantalla completa sin tener que mover el markup. */
+        #mobile-menu-overlay {
+            height: 100vh;
+            height: 100dvh;
+            background-color: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.35s ease, background-color 0.35s ease,
+                        backdrop-filter 0.35s ease, visibility 0s linear 0.35s;
+        }
+        #mobile-menu-overlay.is-open {
+            background-color: rgba(5, 5, 5, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.35s ease, background-color 0.35s ease,
+                        backdrop-filter 0.35s ease, visibility 0s linear 0s;
+        }
+
+        /* Panel del menú: siempre nítido, se desliza desde la derecha.
+           Misma razón que el overlay: altura fijada en unidades de viewport para no
+           depender del containing block roto que crea el backdrop-filter del header. */
+        #mobile-menu {
+            height: 100vh;
+            height: 100dvh;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
+        }
+        #mobile-menu.is-open {
+            transform: translateX(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hamburger-bar,
+            #mobile-menu-overlay,
+            #mobile-menu {
+                transition-duration: 0.001s !important;
+            }
+        }
+    </style>
+
+    <style id="jeca-intro-styles">
+        /* ============================================
+           Intro "System Initialization — JECA" (≤ 2.9 s)
+           Solo visible si <html> tiene .jeca-intro (lo decide el script del <head>).
+           Línea de tiempo:
+             0.00–0.55  Activación: línea central, nodos, fragmentos, esquinas HUD
+             0.55–1.50  Identidad: rieles se separan, JECA se dibuja, < />, nombre y rol
+             1.46–2.28  Online: barrido de luz, trazo blanco, "SYSTEM ONLINE", bloqueo de esquinas
+             2.28–2.90  Salida: colapso a una línea, haz cian y apertura de persianas
+           ============================================ */
+        #jeca-intro { display: none; }
+
+        html.jeca-intro #jeca-intro {
+            --jeca-cyan: #00f0ff;
+            --jeca-purple: #8a2be2;
+            --jeca-text: #e2e8f0;
+            --jeca-muted: #94a3b8;
+            --jeca-bg: #050505;
+            --jeca-w: min(86vw, 760px);
+            --jeca-gap: clamp(104px, min(19vw, 27vh), 168px);
+            --jeca-out: cubic-bezier(0.16, 1, 0.3, 1);
+            display: block;
+            position: fixed;
+            inset: 0;
+            z-index: 2147483000;
+            overflow: hidden;
+            pointer-events: none;
+            contain: layout paint style;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--jeca-text);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Mientras se reproduce: bloquea interacción/scroll y retiene la entrada del hero */
+        html.jeca-intro-playing { overflow: hidden; scrollbar-gutter: stable; }
+        html.jeca-intro-playing #jeca-intro { pointer-events: auto; touch-action: none; }
+        html.jeca-intro-playing #hero .reveal.active { opacity: 0; transform: translateY(30px); }
+
+        /* Salto manual (clic / tecla) */
+        #jeca-intro.jeca-intro--skip { opacity: 0; transition: opacity 0.25s ease; pointer-events: none; }
+
+        /* --- Persianas (fondo) que se abren al final --- */
+        .jeca-intro__shutter {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: calc(50% + 1px);
+            background: var(--jeca-bg);
+            will-change: transform;
+        }
+        .jeca-intro__shutter--top { top: 0; animation: jeca-shut-top 0.42s cubic-bezier(0.7, 0, 0.2, 1) 2.48s both; }
+        .jeca-intro__shutter--bot { bottom: 0; animation: jeca-shut-bot 0.42s cubic-bezier(0.7, 0, 0.2, 1) 2.48s both; }
+        .jeca-intro__shutter::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--jeca-cyan) 20%, #fff 50%, var(--jeca-cyan) 80%, transparent);
+            box-shadow: 0 0 14px 1px rgba(0, 240, 255, 0.6);
+            opacity: 0;
+            animation: jeca-seam 0.44s linear 2.46s both;
+        }
+        .jeca-intro__shutter--top::after { bottom: 0; }
+        .jeca-intro__shutter--bot::after { top: 0; }
+
+        /* --- Fondo: cuadrícula alineada con la del hero + halo --- */
+        .jeca-intro__backdrop { position: absolute; inset: 0; animation: jeca-backdrop 2.55s linear both; }
+        .jeca-intro__grid {
+            position: absolute;
+            inset: 0;
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(0, 240, 255, 0.06) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 240, 255, 0.06) 1px, transparent 1px);
+            -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, #000 0%, transparent 75%);
+            mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, #000 0%, transparent 75%);
+            animation: jeca-fade-in 0.6s ease-out both;
+        }
+        .jeca-intro__halo {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: min(120vw, 920px);
+            aspect-ratio: 2 / 1;
+            background: radial-gradient(closest-side at 42% 50%, rgba(0, 240, 255, 0.13), transparent 70%),
+                        radial-gradient(closest-side at 62% 56%, rgba(138, 43, 226, 0.12), transparent 70%);
+            animation: jeca-halo 1.6s ease-out 0.5s both;
+        }
+
+        /* --- Fragmentos que convergen al centro --- */
+        .jeca-intro__fx { position: absolute; inset: 0; }
+        .jeca-intro__frag {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: var(--l);
+            height: 1px;
+            margin-left: calc(var(--l) / -2);
+            background: linear-gradient(90deg, transparent, var(--c, var(--jeca-cyan)), transparent);
+            opacity: 0;
+            animation: jeca-frag 0.55s cubic-bezier(0.5, 0, 0.2, 1) var(--d) both;
+        }
+
+        /* --- Escenario central --- */
+        .jeca-intro__stage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: jeca-collapse 0.26s cubic-bezier(0.7, 0, 0.84, 0) 2.28s forwards;
+        }
+        .jeca-intro__frame {
+            position: relative;
+            width: var(--jeca-w);
+            height: calc(var(--jeca-gap) * 2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Rieles: nacen como una sola línea central y se separan para enmarcar la identidad */
+        .jeca-intro__rail { position: absolute; left: 0; right: 0; height: 1px; }
+        .jeca-intro__rail--top { top: 0; animation: jeca-rail-top 0.42s var(--jeca-out) 0.56s both; }
+        .jeca-intro__rail--bot { bottom: 0; animation: jeca-rail-bot 0.42s var(--jeca-out) 0.56s both; }
+        .jeca-intro__line {
+            position: relative;
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.85) 12%, var(--jeca-cyan) 50%, rgba(0, 240, 255, 0.85) 88%, transparent);
+            animation: jeca-draw-x 0.42s cubic-bezier(0.77, 0, 0.18, 1) 0.04s both;
+        }
+        .jeca-intro__line::after {
+            content: '';
+            position: absolute;
+            left: 8%;
+            right: 8%;
+            top: -5px;
+            height: 11px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(0, 240, 255, 0.28), transparent 70%);
+        }
+
+        /* Nodos de energía sobre la línea: se encienden y convergen al centro */
+        .jeca-intro__nodes { position: absolute; left: 0; right: 0; top: 50%; height: 0; }
+        .jeca-intro__node {
+            position: absolute;
+            left: calc(var(--p) * 1%);
+            top: 0;
+            width: 5px;
+            height: 5px;
+            margin: -2.5px 0 0 -2.5px;
+            background: var(--jeca-cyan);
+            box-shadow: 0 0 8px 1px rgba(0, 240, 255, 0.8);
+            opacity: 0;
+            animation: jeca-node 0.82s cubic-bezier(0.55, 0, 0.25, 1) var(--d) both;
+        }
+
+        /* Esquinas HUD */
+        .jeca-intro__corner {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border: 0 solid var(--jeca-cyan);
+            opacity: 0;
+            animation: jeca-corner 1.7s var(--jeca-out) 0.24s both;
+        }
+        .jeca-intro__corner--tl { top: -10px; left: -10px; border-top-width: 1.5px; border-left-width: 1.5px; --cx: -1; --cy: -1; }
+        .jeca-intro__corner--tr { top: -10px; right: -10px; border-top-width: 1.5px; border-right-width: 1.5px; --cx: 1; --cy: -1; }
+        .jeca-intro__corner--bl { bottom: -10px; left: -10px; border-bottom-width: 1.5px; border-left-width: 1.5px; --cx: -1; --cy: 1; }
+        .jeca-intro__corner--br { bottom: -10px; right: -10px; border-bottom-width: 1.5px; border-right-width: 1.5px; --cx: 1; --cy: 1; }
+
+        /* HUD superior: estado + barra segmentada */
+        .jeca-intro__hud {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 100%;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-family: 'Fira Code', ui-monospace, monospace;
+            font-size: clamp(9px, 1.15vw, 11px);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+        .jeca-intro__status { display: grid; }
+        .jeca-intro__status > span { grid-area: 1 / 1; white-space: nowrap; }
+        .jeca-intro__boot {
+            color: var(--jeca-cyan);
+            clip-path: inset(0 100% 0 0);
+            animation: jeca-type 0.5s steps(19, end) 0.2s both, jeca-msg-out 0.16s ease-in 1.5s forwards;
+        }
+        .jeca-intro__caret {
+            display: inline-block;
+            width: 0.55em;
+            height: 1em;
+            margin-left: 0.2em;
+            vertical-align: -0.15em;
+            background: var(--jeca-cyan);
+            animation: jeca-blink 0.4s steps(1, end) 0.7s 2;
+        }
+        .jeca-intro__online {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7em;
+            color: var(--jeca-text);
+            opacity: 0;
+            animation: jeca-msg-in 0.3s var(--jeca-out) 1.64s both;
+        }
+        .jeca-intro__dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--jeca-cyan);
+            box-shadow: 0 0 10px 2px rgba(0, 240, 255, 0.7);
+        }
+        .jeca-intro__bars { display: flex; gap: 3px; flex-shrink: 0; }
+        .jeca-intro__bars span {
+            width: clamp(6px, 1.1vw, 10px);
+            height: 3px;
+            background: var(--jeca-cyan);
+            opacity: 0.12;
+            animation: jeca-seg 0.16s linear calc(0.3s + var(--i) * 0.12s) both;
+        }
+
+        /* Núcleo: < JECA /> + nombre + rol */
+        .jeca-intro__core {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(10px, 1.8vw, 18px);
+            text-align: center;
+        }
+        .jeca-intro__mark {
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 1.6vw, 18px);
+            font-family: 'Fira Code', ui-monospace, monospace;
+            font-size: clamp(20px, 5vw, 44px);
+            line-height: 1;
+            color: var(--jeca-cyan);
+        }
+        .jeca-intro__br { display: inline-block; text-shadow: 0 0 12px rgba(0, 240, 255, 0.5); opacity: 0; }
+        .jeca-intro__br--l { animation: jeca-br-l 0.45s var(--jeca-out) 0.95s both; }
+        .jeca-intro__br--r { animation: jeca-br-r 0.45s var(--jeca-out) 1s both; }
+
+        .jeca-intro__logo { position: relative; width: min(62vw, 440px, 85vh); aspect-ratio: 306 / 96; }
+        .jeca-intro__svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            fill: none;
+            stroke-linecap: butt;
+            stroke-linejoin: miter;
+        }
+        .jeca-intro__svg--glow { stroke: var(--jeca-cyan); stroke-width: 5; filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.55)); }
+        .jeca-intro__stroke {
+            stroke-dasharray: 1 1;
+            stroke-dashoffset: 1;
+            animation: jeca-stroke 0.52s cubic-bezier(0.65, 0, 0.35, 1) var(--d) both;
+        }
+        .jeca-intro__guides { stroke: rgba(138, 43, 226, 0.7); stroke-width: 0.6; stroke-dasharray: 2 4; }
+        .jeca-intro__guides line {
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: jeca-guide 1.3s var(--jeca-out) 0.5s both;
+        }
+        .jeca-intro__svg--ink {
+            stroke: #f1f5f9;
+            stroke-width: 2.2;
+            clip-path: inset(0 100% 0 0);
+            animation: jeca-wipe 0.42s cubic-bezier(0.45, 0, 0.2, 1) 1.54s both;
+        }
+
+        .jeca-intro__name {
+            display: block;
+            overflow: hidden;
+            padding-left: 0.34em;
+            font-size: clamp(10px, 1.55vw, 15px);
+            font-weight: 500;
+            letter-spacing: 0.34em;
+            line-height: 1.4;
+            text-transform: uppercase;
+            white-space: nowrap;
+            color: var(--jeca-text);
+        }
+        .jeca-intro__name > span { display: block; animation: jeca-rise 0.5s var(--jeca-out) 1.08s both; }
+        .jeca-intro__role {
+            padding-left: 0.3em;
+            font-family: 'Fira Code', ui-monospace, monospace;
+            font-size: clamp(9px, 1.1vw, 11px);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--jeca-muted);
+            opacity: 0;
+            animation: jeca-fade-up 0.45s var(--jeca-out) 1.24s both;
+        }
+        .jeca-intro__role b { color: var(--jeca-purple); font-weight: 500; }
+
+        /* Barrido de luz ("destello" de activación) */
+        .jeca-intro__sweep {
+            position: absolute;
+            top: 12%;
+            bottom: 12%;
+            left: 0;
+            width: 22%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.08) 35%, rgba(150, 250, 255, 0.3) 50%, rgba(0, 240, 255, 0.08) 65%, transparent);
+            opacity: 0;
+            animation: jeca-sweep 0.5s cubic-bezier(0.45, 0, 0.25, 1) 1.46s both;
+        }
+
+        /* Haz final: todo colapsa en una línea que abre la web */
+        .jeca-intro__beam {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            margin-top: -1px;
+            background: linear-gradient(90deg, transparent, var(--jeca-cyan) 18%, #fff 50%, var(--jeca-cyan) 82%, transparent);
+            box-shadow: 0 0 22px 2px rgba(0, 240, 255, 0.5);
+            opacity: 0;
+            animation: jeca-beam 0.46s cubic-bezier(0.16, 1, 0.3, 1) 2.36s both;
+        }
+
+        @media (max-width: 640px) {
+            html.jeca-intro #jeca-intro { --jeca-w: min(88vw, 760px); }
+            .jeca-intro__hud { letter-spacing: 0.14em; margin-bottom: 12px; }
+            .jeca-intro__bars { gap: 2px; }
+        }
+        @media (max-width: 380px) {
+            .jeca-intro__name { letter-spacing: 0.22em; padding-left: 0.22em; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #jeca-intro { display: none !important; }
+        }
+
+        /* --- Keyframes --- */
+        @keyframes jeca-fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes jeca-backdrop { 0%, 90% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes jeca-halo {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+            45% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+            72% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes jeca-frag {
+            0% { opacity: 0; transform: translate3d(var(--from), var(--y), 0) scaleX(1.8); }
+            35% { opacity: 0.9; }
+            100% { opacity: 0; transform: translate3d(0, var(--y), 0) scaleX(0.2); }
+        }
+        @keyframes jeca-draw-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        @keyframes jeca-rail-top { from { transform: translate3d(0, calc(var(--jeca-gap) - 0.5px), 0); } to { transform: none; } }
+        @keyframes jeca-rail-bot { from { transform: translate3d(0, calc(0.5px - var(--jeca-gap)), 0); } to { transform: none; } }
+        @keyframes jeca-node {
+            0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(45deg) scale(0); }
+            22% { opacity: 1; transform: translate3d(0, 0, 0) rotate(45deg) scale(1.7); }
+            40%, 55% { opacity: 1; transform: translate3d(0, 0, 0) rotate(45deg) scale(1); }
+            100% { opacity: 0; transform: translate3d(calc((50 - var(--p)) * var(--jeca-w) / 100), 0, 0) rotate(45deg) scale(0.3); }
+        }
+        @keyframes jeca-corner {
+            0% { opacity: 0; transform: translate3d(calc(var(--cx) * 26px), calc(var(--cy) * 26px), 0); }
+            26%, 78% { opacity: 0.75; transform: none; }
+            85% { opacity: 1; transform: translate3d(calc(var(--cx) * -5px), calc(var(--cy) * -5px), 0); }
+            100% { opacity: 0.85; transform: none; }
+        }
+        @keyframes jeca-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+        @keyframes jeca-blink { 50% { opacity: 0; } }
+        @keyframes jeca-msg-out { to { opacity: 0; transform: translate3d(0, -6px, 0); } }
+        @keyframes jeca-msg-in { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+        @keyframes jeca-seg { to { opacity: 0.95; } }
+        @keyframes jeca-br-l { from { opacity: 0; transform: translate3d(-28px, 0, 0); } to { opacity: 1; transform: none; } }
+        @keyframes jeca-br-r { from { opacity: 0; transform: translate3d(28px, 0, 0); } to { opacity: 1; transform: none; } }
+        @keyframes jeca-stroke { to { stroke-dashoffset: 0; } }
+        @keyframes jeca-guide {
+            0% { opacity: 0; transform: scaleX(0); }
+            25%, 75% { opacity: 1; transform: scaleX(1); }
+            100% { opacity: 0; transform: scaleX(1); }
+        }
+        @keyframes jeca-wipe { to { clip-path: inset(0 0 0 0); } }
+        @keyframes jeca-rise { from { transform: translate3d(0, 110%, 0); } to { transform: none; } }
+        @keyframes jeca-fade-up { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: none; } }
+        @keyframes jeca-sweep {
+            0% { opacity: 0; transform: translate3d(-110%, 0, 0) skewX(-16deg); }
+            20%, 80% { opacity: 1; }
+            100% { opacity: 0; transform: translate3d(470%, 0, 0) skewX(-16deg); }
+        }
+        @keyframes jeca-collapse {
+            0% { transform: none; opacity: 1; }
+            75% { transform: scale(1.04, 0.03); opacity: 1; }
+            100% { transform: scale(1.12, 0.004); opacity: 0; }
+        }
+        @keyframes jeca-beam {
+            0% { opacity: 0; transform: scaleX(0); }
+            30% { opacity: 1; }
+            55% { opacity: 1; transform: scaleX(1); }
+            100% { opacity: 0; transform: scaleX(1); }
+        }
+        @keyframes jeca-shut-top { to { transform: translate3d(0, -100%, 0); } }
+        @keyframes jeca-shut-bot { to { transform: translate3d(0, 100%, 0); } }
+        @keyframes jeca-seam { 0% { opacity: 0; } 12% { opacity: 1; } 65% { opacity: 0.7; } 100% { opacity: 0; } }
+    </style>
+</head>
+<body class="antialiased selection:bg-tech-cyan selection:text-tech-darker relative font-sans">
+
+    <!-- ============================================
+         Intro "System Initialization — JECA" (decorativa, una vez por sesión)
+         ============================================ -->
+    <div id="jeca-intro" class="jeca-intro" aria-hidden="true">
+        <div class="jeca-intro__shutter jeca-intro__shutter--top"></div>
+        <div class="jeca-intro__shutter jeca-intro__shutter--bot"></div>
+
+        <div class="jeca-intro__backdrop">
+            <div class="jeca-intro__grid"></div>
+            <div class="jeca-intro__halo"></div>
+        </div>
+
+        <div class="jeca-intro__fx">
+            <span class="jeca-intro__frag" style="--from:-55vw; --y:-38px; --l:120px; --d:.14s"></span>
+            <span class="jeca-intro__frag" style="--from:55vw; --y:26px; --l:80px; --d:.18s"></span>
+            <span class="jeca-intro__frag" style="--from:52vw; --y:-70px; --l:100px; --d:.2s"></span>
+            <span class="jeca-intro__frag" style="--from:-50vw; --y:64px; --l:60px; --d:.24s; --c:#8a2be2"></span>
+            <span class="jeca-intro__frag" style="--from:46vw; --y:-14px; --l:50px; --d:.27s; --c:#8a2be2"></span>
+            <span class="jeca-intro__frag" style="--from:-48vw; --y:12px; --l:40px; --d:.3s"></span>
+        </div>
+
+        <div class="jeca-intro__stage">
+            <div class="jeca-intro__frame">
+                <div class="jeca-intro__rail jeca-intro__rail--top"><span class="jeca-intro__line"></span></div>
+                <div class="jeca-intro__rail jeca-intro__rail--bot"><span class="jeca-intro__line"></span></div>
+
+                <div class="jeca-intro__nodes">
+                    <span class="jeca-intro__node" style="--p:6; --d:.34s"></span>
+                    <span class="jeca-intro__node" style="--p:20; --d:.26s"></span>
+                    <span class="jeca-intro__node" style="--p:34; --d:.18s"></span>
+                    <span class="jeca-intro__node" style="--p:66; --d:.18s"></span>
+                    <span class="jeca-intro__node" style="--p:80; --d:.26s"></span>
+                    <span class="jeca-intro__node" style="--p:94; --d:.34s"></span>
+                </div>
+
+                <span class="jeca-intro__corner jeca-intro__corner--tl"></span>
+                <span class="jeca-intro__corner jeca-intro__corner--tr"></span>
+                <span class="jeca-intro__corner jeca-intro__corner--bl"></span>
+                <span class="jeca-intro__corner jeca-intro__corner--br"></span>
+
+                <div class="jeca-intro__hud">
+                    <div class="jeca-intro__status">
+                        <span class="jeca-intro__boot">&gt; Initializing core<span class="jeca-intro__caret"></span></span>
+                        <span class="jeca-intro__online"><span class="jeca-intro__dot"></span>System online</span>
+                    </div>
+                    <div class="jeca-intro__bars">
+                        <span style="--i:0"></span><span style="--i:1"></span><span style="--i:2"></span><span style="--i:3"></span><span style="--i:4"></span>
+                        <span style="--i:5"></span><span style="--i:6"></span><span style="--i:7"></span><span style="--i:8"></span><span style="--i:9"></span>
+                    </div>
+                </div>
+
+                <div class="jeca-intro__core">
+                    <div class="jeca-intro__mark">
+                        <span class="jeca-intro__br jeca-intro__br--l">&lt;</span>
+                        <div class="jeca-intro__logo">
+                            <svg class="jeca-intro__svg jeca-intro__svg--glow" viewBox="-4 2 306 96" focusable="false">
+                                <g class="jeca-intro__guides">
+                                    <line x1="-4" y1="10" x2="302" y2="10" />
+                                    <line x1="-4" y1="50" x2="302" y2="50" />
+                                    <line x1="-4" y1="90" x2="302" y2="90" />
+                                </g>
+                                <path class="jeca-intro__stroke" pathLength="1" style="--d:.58s" d="M16 10H58V70L38 90H18L4 76" />
+                                <path class="jeca-intro__stroke" pathLength="1" style="--d:.66s" d="M135 10H94L80 24V76L94 90H135" />
+                                <path class="jeca-intro__stroke" pathLength="1" style="--d:.86s" d="M80 50H124" />
+                                <path class="jeca-intro__stroke" pathLength="1" style="--d:.74s" d="M215 10H170L156 24V76L170 90H215" />
+                                <path class="jeca-intro__stroke" pathLength="1" style="--d:.82s" d="M236 90V28L254 10H276L294 28V90" />
+                                <path class="jeca-intro__stroke" pathLength="1" style="--d:.98s" d="M236 58H294" />
+                            </svg>
+                            <svg class="jeca-intro__svg jeca-intro__svg--ink" viewBox="-4 2 306 96" focusable="false">
+                                <path d="M16 10H58V70L38 90H18L4 76" />
+                                <path d="M135 10H94L80 24V76L94 90H135" />
+                                <path d="M80 50H124" />
+                                <path d="M215 10H170L156 24V76L170 90H215" />
+                                <path d="M236 90V28L254 10H276L294 28V90" />
+                                <path d="M236 58H294" />
+                            </svg>
+                        </div>
+                        <span class="jeca-intro__br jeca-intro__br--r">/&gt;</span>
+                    </div>
+                    <span class="jeca-intro__name"><span>Jessica Eliana Castro Adrada</span></span>
+                    <span class="jeca-intro__role"><b>//</b> Systems Engineer</span>
+                </div>
+
+                <span class="jeca-intro__sweep"></span>
+            </div>
+        </div>
+
+        <div class="jeca-intro__beam"></div>
+    </div>
+    <script>
+        /* Intro JECA — controlador: marca la sesión, bloquea scroll temporalmente y retira la intro
+           sincronizado con el final real de la animación (con respaldo para que nunca quede bloqueada). */
+        (function () {
+            var root = document.documentElement;
+            var intro = document.getElementById('jeca-intro');
+            if (!intro) return;
+            if (!root.classList.contains('jeca-intro')) {
+                intro.parentNode.removeChild(intro);
+                return;
+            }
+
+            var KEY = 'jeca_intro_played';
+            try { window.sessionStorage.setItem(KEY, '1'); } catch (e) {}
+            try { document.cookie = KEY + '=1; path=/; SameSite=Lax'; } catch (e) {}
+
+            root.classList.add('jeca-intro-playing');
+
+            var shutter = intro.querySelector('.jeca-intro__shutter--bot');
+            var released = false;
+            var finished = false;
+            // Respaldo: la secuencia dura 2.9 s; si animationend no llega (pestaña en segundo plano, etc.) se retira igual.
+            var fallback = window.setTimeout(finish, 3600);
+
+            // Libera scroll/interacción y deja entrar el hero mientras las persianas se abren
+            function release() {
+                if (released) return;
+                released = true;
+                root.classList.remove('jeca-intro-playing');
+            }
+
+            function finish() {
+                if (finished) return;
+                finished = true;
+                release();
+                window.clearTimeout(fallback);
+                document.removeEventListener('keydown', skip);
+                if (intro.parentNode) intro.parentNode.removeChild(intro);
+                root.classList.remove('jeca-intro');
+            }
+
+            // Clic, toque o tecla: salida rápida
+            function skip() {
+                if (released) return;
+                release();
+                intro.classList.add('jeca-intro--skip');
+                intro.addEventListener('transitionend', finish);
+                window.setTimeout(finish, 400);
+            }
+
+            intro.addEventListener('animationstart', function (e) {
+                if (e.animationName === 'jeca-shut-bot') release();
+            });
+            intro.addEventListener('animationend', function (e) {
+                if (e.animationName === 'jeca-shut-bot') finish();
+            });
+            intro.addEventListener('pointerdown', skip);
+            document.addEventListener('keydown', skip);
+        })();
+    </script>
+
+    <header class="fixed top-0 w-full z-50 bg-tech-dark/80 backdrop-blur-md border-b border-tech-border transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="text-xl font-bold tracking-tighter flex items-center gap-2 group">
+                <span class="text-tech-cyan font-mono text-sm">&lt;</span>
+                <span class="group-hover:text-tech-cyan transition-colors">JECA</span>
+                <span class="text-tech-cyan font-mono text-sm">/&gt;</span>
+            </a>
+
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-tech-textMuted">
+                <a href="#about" class="hover:text-white transition-colors hover:shadow-[0_2px_0_0_#00f0ff] py-1">Sobre mí</a>
+                <a href="#experience" class="hover:text-white transition-colors hover:shadow-[0_2px_0_0_#00f0ff] py-1">Experiencia</a>
+                <a href="#skills" class="hover:text-white transition-colors hover:shadow-[0_2px_0_0_#00f0ff] py-1">Skills</a>
+                <a href="#achievements" class="hover:text-white transition-colors hover:shadow-[0_2px_0_0_#00f0ff] py-1">Logros</a>
+                <a href="#education" class="hover:text-white transition-colors hover:shadow-[0_2px_0_0_#00f0ff] py-1">Educación</a>
+                <a href="#contact" class="px-5 py-2 rounded-md bg-tech-card border border-tech-border text-white hover:bg-tech-border transition-all">Contactar</a>
+            </nav>
+
+            <!-- Mobile Menu Toggle -->
+            <button
+                id="mobile-menu-btn"
+                class="md:hidden relative z-[1000] flex items-center justify-center w-11 h-11 -mr-2 text-tech-textMain focus:outline-none focus-visible:ring-2 focus-visible:ring-tech-cyan rounded-md"
+                aria-label="Abrir menú"
+                aria-expanded="false"
+                aria-controls="mobile-menu"
+            >
+                <span class="hamburger-icon relative block">
+                    <span class="hamburger-bar top"></span>
+                    <span class="hamburger-bar middle"></span>
+                    <span class="hamburger-bar bottom"></span>
+                </span>
+            </button>
+        </div>
+
+        <!-- Overlay/backdrop: oscurece y desenfoca el contenido detrás del panel -->
+        <div id="mobile-menu-overlay" class="fixed inset-0 z-[998]"></div>
+
+        <!-- Mobile Nav Panel (oculto por defecto) -->
+        <div
+            id="mobile-menu"
+            class="fixed top-0 right-0 z-[999] h-full w-[82%] max-w-sm bg-tech-darker border-l border-tech-border shadow-2xl flex flex-col justify-center items-center gap-8 text-xl font-medium"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menú de navegación"
+            inert
+        >
+            <button id="close-menu-btn" class="absolute top-6 right-6 flex items-center justify-center w-10 h-10 text-2xl text-tech-textMuted hover:text-white transition-colors" aria-label="Cerrar menú">
+                <i class="ph ph-x"></i>
+            </button>
+            <a href="#about" class="mobile-link text-tech-textMuted hover:text-tech-cyan transition-colors">Sobre mí</a>
+            <a href="#experience" class="mobile-link text-tech-textMuted hover:text-tech-cyan transition-colors">Experiencia</a>
+            <a href="#skills" class="mobile-link text-tech-textMuted hover:text-tech-cyan transition-colors">Skills</a>
+            <a href="#achievements" class="mobile-link text-tech-textMuted hover:text-tech-cyan transition-colors">Logros</a>
+            <a href="#education" class="mobile-link text-tech-textMuted hover:text-tech-cyan transition-colors">Educación</a>
+            <a href="#contact" class="mobile-link text-tech-cyan border border-tech-cyan px-8 py-3 rounded-full mt-4">Contactar</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="relative min-h-screen flex items-center pt-20 overflow-hidden">
+            <!-- Background Elements -->
+            <div class="absolute inset-0 bg-grid-pattern z-0"></div>
+            <div class="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-tech-cyan/5 rounded-full blur-[120px] pointer-events-none"></div>
+            <div class="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-tech-purple/5 rounded-full blur-[150px] pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-6 relative z-10 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <!-- Text Content -->
+                <div class="space-y-8">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tech-cyan/10 border border-tech-cyan/20 reveal">
+                        <span class="w-2 h-2 rounded-full bg-tech-cyan animate-pulse"></span>
+                        <span class="text-xs font-mono text-tech-cyan tracking-wider">SYSTEMS ENGINEER • INFRAESTRUCTURA TI & CLOUD</span>
+                    </div>
+                    
+                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight reveal delay-100">
+                        Garantizando <br />
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-tech-cyan to-tech-purple">infraestructura estable</span><br />
+                        y segura.
+                    </h1>
+                    
+                    <div class="space-y-2 reveal delay-200">
+                        <h2 class="text-2xl md:text-3xl font-medium text-white">Jessica Eliana Castro Adrada</h2>
+                        <p class="text-tech-textMuted text-lg md:text-xl max-w-xl font-light">
+                            Ingeniera de Sistemas con más de 3 años de experiencia asegurando la alta disponibilidad, seguridad y rendimiento de servicios críticos en entornos híbridos y cloud (AWS, Azure, GCP).
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 pt-4 reveal delay-300">
+                        <a href="#achievements" class="px-8 py-4 bg-white text-tech-darker font-medium rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2">
+                            Ver logros <i class="ph ph-arrow-right"></i>
+                        </a>
+                        <a href="https://drive.google.com/file/d/1NyEssvqmtWQ0Dk9cZk5lDJHWe01d72LQ/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="px-8 py-4 bg-tech-card border border-tech-cyan/40 text-tech-cyan font-medium rounded-md hover:bg-tech-cyan/10 transition-colors flex items-center gap-2 glow-hover">
+                            <i class="ph ph-file-pdf text-lg"></i> Descargar CV
+                        </a>
+                        <a href="#contact" class="px-8 py-4 bg-tech-card border border-tech-border text-white font-medium rounded-md hover:bg-tech-border transition-colors flex items-center gap-2 glow-hover">
+                            Contactarme
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Visual/Tech Element -->
+                <div class="hidden lg:flex justify-end reveal delay-200">
+                    <div class="relative w-full max-w-md rounded-2xl border border-tech-border bg-tech-card/50 backdrop-blur-sm p-6 glow-hover">
+                        <!-- Decoración de terminal superior -->
+                        <div class="flex items-center gap-2 mb-4 pb-4 border-b border-tech-border">
+                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                            <span class="ml-4 text-xs font-mono text-tech-textMuted">jessica_castro.json</span>
+                        </div>
+                        <!-- Código decorativo -->
+                        <div class="font-mono text-xs sm:text-sm leading-relaxed text-gray-400 break-words">
+                            <span class="text-tech-purple">const</span> <span class="text-blue-400">engineer</span> = {<br>
+                            &nbsp;&nbsp;name: <span class="text-tech-cyan">"Jessica Eliana Castro Adrada"</span>,<br>
+                            &nbsp;&nbsp;role: <span class="text-tech-cyan">"Ingeniera de Sistemas"</span>,<br>
+                            &nbsp;&nbsp;experience: <span class="text-tech-cyan">"+3 años"</span>,<br>
+                            &nbsp;&nbsp;university: <span class="text-tech-cyan">"CUN"</span>,<br>
+                            &nbsp;&nbsp;cloud: [<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-tech-cyan">"AWS"</span>, <span class="text-tech-cyan">"Azure"</span>, <span class="text-tech-cyan">"GCP"</span><br>
+                            &nbsp;&nbsp;],<br>
+                            &nbsp;&nbsp;databases: [<span class="text-tech-cyan">"MySQL"</span>, <span class="text-tech-cyan">"SQL Server"</span>, <span class="text-tech-cyan">"Oracle"</span>],<br>
+                            &nbsp;&nbsp;highAvailability: <span class="text-orange-400">true</span>,<br>
+                            &nbsp;&nbsp;execute: <span class="text-tech-purple">function</span>() {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-tech-purple">return</span> <span class="text-tech-cyan">"Ensuring uptime, security & performance."</span>;<br>
+                            &nbsp;&nbsp;}<br>
+                            };<br>
+                            <br>
+                            <span class="text-blue-400">engineer</span>.<span class="text-yellow-200">execute</span>();
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-24 border-t border-tech-border relative">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center gap-4 mb-12 reveal">
+                    <span class="text-tech-cyan font-mono">01 /</span>
+                    <h2 class="text-3xl md:text-4xl font-bold">Sobre mí</h2>
+                    <div class="h-[1px] bg-tech-border flex-grow ml-4"></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    <div class="lg:col-span-7 space-y-6 reveal">
+                        <div class="flex flex-col sm:flex-row gap-6 items-start">
+                            <img
+                                src="https://lh3.googleusercontent.com/d/1OGnu0j9razYSCBAlXXIhkIiRDDkgobSM"
+                                alt="Foto de Jessica Eliana Castro Adrada"
+                                class="w-40 h-40 sm:w-44 sm:h-44 rounded-2xl object-cover border-2 border-tech-cyan/30 shadow-[0_0_30px_rgba(0,240,255,0.15)] flex-shrink-0 mx-auto sm:mx-0"
+                                loading="lazy"
+                            >
+                            <div class="space-y-6 text-lg text-tech-textMuted font-light">
+                                <p>
+                                    Soy <strong class="text-white font-medium">Ingeniera de Sistemas</strong> con más de 3 años de experiencia asegurando la alta disponibilidad, continuidad operativa, seguridad, rendimiento y escalabilidad de servicios críticos en entornos híbridos y empresariales.
+                                </p>
+                                <p>
+                                    Soy experta en gestión integral de servidores, monitoreo de aplicaciones, administración de redes, automatización de tareas, mantenimiento de bases de datos SQL, gestión de incidentes, resolución de problemas y coordinación con proveedores para cumplimiento de SLA.
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-lg text-tech-textMuted font-light">
+                            Tengo alto dominio en entornos cloud (<strong class="text-white font-medium">AWS / Azure / GCP</strong>), infraestructura virtualizada, herramientas de supervisión y monitoreo, administración de accesos, análisis técnico, documentación y soporte a equipos operativos y de desarrollo. Soy orientada a resultados, con fortalezas en análisis, diagnóstico, automatización, trabajo colaborativo y mejora continua de plataformas tecnológicas.
+                        </p>
+                    </div>
+
+                    <!-- Tarjetas de perfil profesional (Resumen) -->
+                    <div class="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4 reveal delay-100">
+                        <div class="bg-tech-card border border-tech-border p-6 rounded-xl glow-hover">
+                            <i class="ph ph-hard-drives text-3xl text-tech-cyan mb-4"></i>
+                            <h3 class="text-white font-medium mb-2">Infraestructura TI</h3>
+                            <p class="text-sm text-tech-textMuted">Administración de servidores, redes y recursos tecnológicos.</p>
+                        </div>
+                        <div class="bg-tech-card border border-tech-border p-6 rounded-xl glow-hover">
+                            <i class="ph ph-cloud text-3xl text-tech-purple mb-4"></i>
+                            <h3 class="text-white font-medium mb-2">Cloud</h3>
+                            <p class="text-sm text-tech-textMuted">Operación de infraestructura en AWS, Azure y GCP.</p>
+                        </div>
+                        <div class="bg-tech-card border border-tech-border p-6 rounded-xl glow-hover">
+                            <i class="ph ph-database text-3xl text-yellow-400 mb-4"></i>
+                            <h3 class="text-white font-medium mb-2">Bases de Datos</h3>
+                            <p class="text-sm text-tech-textMuted">Gestión y mantenimiento de MySQL, SQL Server y Oracle.</p>
+                        </div>
+                        <div class="bg-tech-card border border-tech-border p-6 rounded-xl glow-hover">
+                            <i class="ph ph-shield-check text-3xl text-green-400 mb-4"></i>
+                            <h3 class="text-white font-medium mb-2">Seguridad</h3>
+                            <p class="text-sm text-tech-textMuted">Control de accesos, firewalls y políticas de seguridad.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="experience" class="py-24 border-t border-tech-border bg-tech-card/20">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center gap-4 mb-16 reveal">
+                    <span class="text-tech-cyan font-mono">02 /</span>
+                    <h2 class="text-3xl md:text-4xl font-bold">Experiencia</h2>
+                    <div class="h-[1px] bg-tech-border flex-grow ml-4"></div>
+                </div>
+
+                <div class="relative max-w-4xl mx-auto">
+                    <!-- Línea central timeline -->
+                    <div class="absolute left-0 md:left-8 top-0 bottom-0 w-px bg-tech-border"></div>
+
+                    <!-- SIIMED S.A.S. -->
+                    <div class="relative pl-8 md:pl-24 mb-12 reveal">
+                        <!-- Punto indicador -->
+                        <div class="absolute left-[-4px] md:left-[28px] top-1.5 w-2 h-2 rounded-full bg-tech-cyan shadow-[0_0_10px_#00f0ff]"></div>
+                        
+                        <div class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4 mb-2">
+                            <h3 class="text-xl font-semibold text-white">Asistente de Ingeniería</h3>
+                            <span class="text-tech-cyan font-mono text-sm">@ SIIMED S.A.S.</span>
+                        </div>
+                        <div class="text-sm text-tech-textMuted font-mono mb-4">Febrero 2022 — Actual</div>
+                        
+                        <ul class="space-y-3 text-tech-textMuted font-light list-none">
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-cyan mt-1 text-sm flex-shrink-0"></i>
+                                <span>Garantizo la disponibilidad y el rendimiento de los sistemas, administrando recursos tecnológicos (CPU, memoria, almacenamiento, bases de datos, redes y servicios).</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-cyan mt-1 text-sm flex-shrink-0"></i>
+                                <span>Administro infraestructura en la nube (máquinas virtuales, contenedores, redes y servicios gestionados) y gestiono copias de seguridad y planes de contingencia.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-cyan mt-1 text-sm flex-shrink-0"></i>
+                                <span>Monitoreo servidores, aplicaciones y bases de datos detectando anomalías, y coordino con proveedores el cumplimiento de SLA ante incidentes críticos.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-cyan mt-1 text-sm flex-shrink-0"></i>
+                                <span>Lidero migraciones tecnológicas de servidores, bases de datos y aplicaciones, y gestiono tickets ITSM documentando soluciones.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- COMWARE S.A. -->
+                    <div class="relative pl-8 md:pl-24 reveal delay-100">
+                        <div class="absolute left-[-4px] md:left-[28px] top-1.5 w-2 h-2 rounded-full bg-tech-border border border-tech-textMuted"></div>
+                        
+                        <div class="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-4 mb-2">
+                            <h3 class="text-xl font-semibold text-white">Aprendiz de Desarrollo</h3>
+                            <span class="text-tech-textMuted font-mono text-sm">@ COMWARE S.A.</span>
+                        </div>
+                        <div class="text-sm text-tech-textMuted font-mono mb-4">Diciembre 2018 — Junio 2019</div>
+                        
+                        <ul class="space-y-3 text-tech-textMuted font-light list-none">
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-textMuted mt-1 text-sm flex-shrink-0"></i>
+                                <span>Administré plataformas Avaya y usuarios en el dominio, garantizando disponibilidad del servicio y soporte telefónico oportuno.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-textMuted mt-1 text-sm flex-shrink-0"></i>
+                                <span>Desarrollé aplicaciones en .NET e interfaces web con HTML y CSS, y consulté/modifiqué scripts SQL en distintos motores de base de datos.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ph-fill ph-caret-right text-tech-textMuted mt-1 text-sm flex-shrink-0"></i>
+                                <span>Apoyé la Torre de Control, realizando monitoreo centralizado de servidores, redes y aplicaciones, y gestionando tickets e incidencias en mesa de ayuda.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="skills" class="py-24 border-t border-tech-border">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center gap-4 mb-16 reveal">
+                    <span class="text-tech-cyan font-mono">03 /</span>
+                    <h2 class="text-3xl md:text-4xl font-bold">Tech Stack</h2>
+                    <div class="h-[1px] bg-tech-border flex-grow ml-4"></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                    <!-- Infraestructura, Cloud y Bases de Datos -->
+                    <div class="space-y-10 reveal">
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-tech-cyan pl-3">Sistemas & Servidores</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-terminal-window text-tech-cyan"></i> Linux</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-desktop-tower text-tech-cyan"></i> Windows Server</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-users-three text-tech-cyan"></i> Active Directory</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-stack text-tech-cyan"></i> VMware / Hyper-V</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-tech-cyan pl-3">Cloud</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-cloud text-tech-cyan"></i> AWS</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-cloud text-tech-cyan"></i> Azure</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-cloud text-tech-cyan"></i> GCP</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-tech-cyan pl-3">Bases de Datos</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-database text-tech-cyan"></i> MySQL</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-database text-tech-cyan"></i> SQL Server</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMain flex items-center gap-2"><i class="ph ph-database text-tech-cyan"></i> Oracle</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Redes, Seguridad, Monitoreo y Desarrollo -->
+                    <div class="space-y-10 reveal delay-100">
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-tech-purple pl-3">Redes & Seguridad</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-shield-check"></i> Firewall & Antivirus</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-lock-key"></i> VPN</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-network"></i> Redes LAN-WAN</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-hard-drives"></i> Backup & Recovery</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-tech-purple pl-3">Monitoreo & Automatización</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-chart-line"></i> Zabbix</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-chart-line"></i> PRTG</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-chart-line"></i> Grafana</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-clipboard-text"></i> ITSM</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-terminal"></i> PowerShell / Bash</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-tech-purple pl-3">Desarrollo</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-git-branch"></i> Git & GitHub</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-code"></i> .NET</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-tech-purple/50 transition-colors cursor-default"><i class="ph ph-file-html"></i> HTML / CSS</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-medium text-white mb-4 border-l-2 border-white/40 pl-3">Habilidades Profesionales</h3>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-white/40 transition-colors cursor-default"><i class="ph ph-users-three"></i> Trabajo Colaborativo</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-white/40 transition-colors cursor-default"><i class="ph ph-chats-circle"></i> Comunicación Efectiva</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-white/40 transition-colors cursor-default"><i class="ph ph-brain"></i> Pensamiento Analítico</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-white/40 transition-colors cursor-default"><i class="ph ph-clock"></i> Gestión del Tiempo</div>
+                                <div class="px-4 py-2 rounded-md bg-tech-card border border-tech-border text-tech-textMuted flex items-center gap-2 hover:border-white/40 transition-colors cursor-default"><i class="ph ph-target"></i> Orientación a Resultados</div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-tech-cyan/5 border border-tech-cyan/10 rounded-lg">
+                            <p class="text-sm text-tech-textMuted font-mono">
+                                >_ Más de 3 años administrando <span class="text-white">infraestructura crítica</span>, con capacidad para adaptar el stack tecnológico a las necesidades de cada organización.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="achievements" class="py-24 border-t border-tech-border bg-tech-card/20">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="flex items-center gap-4 mb-16 reveal">
+                    <span class="text-tech-cyan font-mono">04 /</span>
+                    <h2 class="text-3xl md:text-4xl font-bold">Logros Destacados</h2>
+                    <div class="h-[1px] bg-tech-border flex-grow ml-4"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <!-- Logro 1: Estabilidad y continuidad (SIIMED) -->
+                    <div class="group rounded-xl overflow-hidden bg-tech-card border border-tech-border hover:border-tech-cyan/50 transition-all duration-300 reveal">
+                        <div class="relative h-40 overflow-hidden bg-tech-dark flex items-center justify-center border-b border-tech-border">
+                            <i class="ph ph-chart-line-up text-6xl text-tech-cyan/70 group-hover:text-tech-cyan transition-colors duration-500"></i>
+                        </div>
+                        <div class="p-6">
+                            <span class="px-3 py-1 text-xs font-medium bg-tech-cyan/10 text-tech-cyan border border-tech-cyan/30 rounded-full">SIIMED S.A.S.</span>
+                            <h3 class="text-xl font-bold text-white mt-3 mb-2 group-hover:text-tech-cyan transition-colors">Estabilidad y continuidad operativa</h3>
+                            <ul class="text-sm text-tech-textMuted space-y-2">
+                                <li>↑ 22% en estabilidad general de los sistemas mediante monitoreo constante y ajustes preventivos.</li>
+                                <li>↑ 17% en continuidad operativa de servicios críticos (bases de datos, aplicaciones y servidores).</li>
+                                <li>↓ 25% en fallos de restauración, optimizando procesos de backup y recuperación.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Logro 2: Eficiencia y soporte (SIIMED) -->
+                    <div class="group rounded-xl overflow-hidden bg-tech-card border border-tech-border hover:border-tech-purple/50 transition-all duration-300 reveal delay-100">
+                        <div class="relative h-40 overflow-hidden bg-tech-dark flex items-center justify-center border-b border-tech-border">
+                            <i class="ph ph-headset text-6xl text-tech-purple/70 group-hover:text-tech-purple transition-colors duration-500"></i>
+                        </div>
+                        <div class="p-6">
+                            <span class="px-3 py-1 text-xs font-medium bg-tech-purple/10 text-tech-purple border border-tech-purple/30 rounded-full">SIIMED S.A.S.</span>
+                            <h3 class="text-xl font-bold text-white mt-3 mb-2 group-hover:text-tech-purple transition-colors">Eficiencia y soporte técnico</h3>
+                            <ul class="text-sm text-tech-textMuted space-y-2">
+                                <li>↓ 18% en tiempos de respuesta de soporte interno, optimizando flujos de atención.</li>
+                                <li>↑ 20% en eficiencia de gestión de recursos tecnológicos con configuraciones optimizadas.</li>
+                                <li>Migraciones internas exitosas con mínima interrupción del servicio.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Logro 3: Mesa de ayuda y bases de datos (COMWARE) -->
+                    <div class="group rounded-xl overflow-hidden bg-tech-card border border-tech-border hover:border-white/50 transition-all duration-300 reveal delay-200">
+                        <div class="relative h-40 overflow-hidden bg-tech-dark flex items-center justify-center border-b border-tech-border">
+                            <i class="ph ph-database text-6xl text-tech-textMuted group-hover:text-white transition-colors duration-500"></i>
+                        </div>
+                        <div class="p-6">
+                            <span class="px-3 py-1 text-xs font-medium bg-white/5 text-white border border-white/30 rounded-full">COMWARE S.A.</span>
+                            <h3 class="text-xl font-bold text-white mt-3 mb-2 group-hover:text-white transition-colors">Torre de Control & Mesa de Ayuda</h3>
+                            <ul class="text-sm text-tech-textMuted space-y-2">
+                                <li>↑ 15% en efectividad del soporte técnico mediante mejor clasificación de incidencias.</li>
+                                <li>↓ 20% en tiempos de atención en mesa de ayuda con gestión organizada de tickets.</li>
+                                <li>↑ 18% en optimización de consultas y ajustes SQL de uso frecuente.</li>
+                                <li>↑ 10% en estabilidad de las aplicaciones Avaya mediante seguimiento de alertas y reportes oportunos.</li>
+                                <li>↑ 15% en usabilidad de interfaces web, ajustando estructuras HTML y estilos CSS.</li>
+                                <li>↑ 12% en estabilidad de servicios internos mediante monitoreo y reportes de fallos recurrentes.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="education" class="py-24 border-t border-tech-border relative overflow-hidden">
+            <!-- Deco -->
+            <div class="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-tech-cyan/5 rounded-full blur-[80px] pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-6 relative z-10">
+                <div class="flex items-center gap-4 mb-16 reveal">
+                    <span class="text-tech-cyan font-mono">05 /</span>
+                    <h2 class="text-3xl md:text-4xl font-bold">Educación</h2>
+                    <div class="h-[1px] bg-tech-border flex-grow ml-4"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    
+                    <!-- Educación Principal -->
+                    <div class="reveal">
+                        <div class="p-8 rounded-2xl bg-gradient-to-br from-tech-card to-tech-dark border border-tech-cyan/20 relative overflow-hidden group hover:border-tech-cyan/50 transition-colors">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-tech-cyan/10 rounded-bl-full transition-transform group-hover:scale-110"></div>
+                            
+                            <div class="flex items-center gap-3 mb-6">
+                                <i class="ph ph-graduation-cap text-3xl text-tech-cyan"></i>
+                                <h3 class="text-2xl font-bold text-white">Formación Universitaria</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <h4 class="text-xl font-medium text-white">Profesional en Ingeniería de Sistemas</h4>
+                                    <p class="text-tech-cyan font-mono mt-1">CUN — Corporación Unificada Nacional de Educación Superior</p>
+                                </div>
+                                <div class="inline-block px-3 py-1 bg-tech-border rounded text-sm text-white font-mono">
+                                    Bogotá — 2024
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formación Complementaria -->
+                    <div class="reveal delay-100">
+                        <h3 class="text-xl font-medium text-white mb-6 border-l-2 border-tech-border pl-3">Formación Complementaria</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="border-b border-tech-border pb-4 group">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-lg font-medium text-white group-hover:text-tech-cyan transition-colors">Tecnólogo en Análisis y Desarrollo de Sistemas de Información</h4>
+                                    <span class="text-xs font-mono text-tech-textMuted">2022</span>
+                                </div>
+                                <p class="text-sm text-tech-textMuted">SENA — Servicio Nacional de Aprendizaje, Bogotá</p>
+                            </div>
+
+                            <div class="border-b border-tech-border pb-4 group">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-lg font-medium text-white group-hover:text-tech-cyan transition-colors">Técnico en Programación de Software</h4>
+                                    <span class="text-xs font-mono text-tech-textMuted">2019</span>
+                                </div>
+                                <p class="text-sm text-tech-textMuted">SENA — Servicio Nacional de Aprendizaje, Bogotá</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-24 border-t border-tech-border bg-tech-card/30">
+            <div class="max-w-4xl mx-auto px-6 text-center">
+                <div class="inline-block mb-4 reveal">
+                    <span class="text-tech-cyan font-mono text-sm">06 / ¿Trabajamos juntos?</span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 reveal delay-100">Contáctame</h2>
+                <p class="text-lg text-tech-textMuted mb-8 max-w-2xl mx-auto font-light reveal delay-200">
+                    Actualmente estoy abierta a nuevas oportunidades profesionales. Si tienes un proyecto, una vacante o simplemente quieres conectar, estaré encantada de responderte.
+                </p>
+
+                <div class="flex flex-wrap justify-center gap-6 mb-12 text-sm text-tech-textMuted font-mono reveal delay-200">
+                    <a href="mailto:jecastroadrada@gmail.com" class="flex items-center gap-2 hover:text-tech-cyan transition-colors"><i class="ph ph-envelope-simple"></i> jecastroadrada@gmail.com</a>
+                    <a href="tel:+573126010398" class="flex items-center gap-2 hover:text-tech-cyan transition-colors"><i class="ph ph-phone"></i> +57 312 601 0398</a>
+                    <span class="flex items-center gap-2"><i class="ph ph-map-pin"></i> Bogotá D.C., Colombia</span>
+                    <a href="https://drive.google.com/file/d/1NyEssvqmtWQ0Dk9cZk5lDJHWe01d72LQ/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 hover:text-tech-cyan transition-colors"><i class="ph ph-file-pdf"></i> Descargar CV</a>
+                </div>
+
+                <!-- Formulario de contacto -->
+                <form id="contactForm" class="text-left space-y-6 max-w-xl mx-auto reveal delay-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label for="name" class="block text-sm font-medium text-tech-textMuted">Nombre</label>
+                            <input type="text" id="name" required class="w-full bg-tech-dark border border-tech-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-tech-cyan focus:ring-1 focus:ring-tech-cyan transition-colors" placeholder="Tu nombre">
+                        </div>
+                        <div class="space-y-2">
+                            <label for="email" class="block text-sm font-medium text-tech-textMuted">Email</label>
+                            <input type="email" id="email" required class="w-full bg-tech-dark border border-tech-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-tech-cyan focus:ring-1 focus:ring-tech-cyan transition-colors" placeholder="tu@email.com">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label for="subject" class="block text-sm font-medium text-tech-textMuted">Asunto</label>
+                        <input type="text" id="subject" required class="w-full bg-tech-dark border border-tech-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-tech-cyan focus:ring-1 focus:ring-tech-cyan transition-colors" placeholder="Asunto del mensaje">
+                    </div>
+                    <div class="space-y-2">
+                        <label for="message" class="block text-sm font-medium text-tech-textMuted">Mensaje</label>
+                        <textarea id="message" rows="4" required class="w-full bg-tech-dark border border-tech-border rounded-md px-4 py-3 text-white focus:outline-none focus:border-tech-cyan focus:ring-1 focus:ring-tech-cyan transition-colors resize-none" placeholder="¿En qué puedo ayudarte?"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full py-4 bg-white text-tech-darker font-medium rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                        Enviar mensaje <i class="ph ph-paper-plane-tilt"></i>
+                    </button>
+                </form>
+
+                <!-- Links Sociales (Placeholders) -->
+                <div class="mt-16 pt-8 border-t border-tech-border flex flex-col md:flex-row justify-between items-center gap-6 reveal delay-300">
+                    <div class="text-left">
+                        <h4 class="text-white font-bold text-lg">Jessica Eliana Castro Adrada</h4>
+                        <p class="text-tech-textMuted text-sm">Ingeniera de Sistemas | Infraestructura TI & Cloud</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <a href="https://www.linkedin.com/in/jecastroadrada" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="w-10 h-10 rounded-full bg-tech-card border border-tech-border flex items-center justify-center text-tech-textMuted hover:text-tech-cyan hover:border-tech-cyan transition-colors">
+                            <i class="ph ph-linkedin-logo text-xl"></i>
+                        </a>
+                        <a href="tel:+573126010398" aria-label="Teléfono" class="w-10 h-10 rounded-full bg-tech-card border border-tech-border flex items-center justify-center text-tech-textMuted hover:text-white hover:border-white transition-colors">
+                            <i class="ph ph-phone text-xl"></i>
+                        </a>
+                        <a href="mailto:jecastroadrada@gmail.com" aria-label="Email" class="w-10 h-10 rounded-full bg-tech-card border border-tech-border flex items-center justify-center text-tech-textMuted hover:text-tech-cyan hover:border-tech-cyan transition-colors">
+                            <i class="ph ph-envelope-simple text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-6 bg-tech-darker border-t border-tech-border text-center text-sm text-tech-textMuted">
+            <p>&copy; 2026 Jessica Eliana Castro Adrada. Todos los derechos reservados.</p>
+        </footer>
+    </main>
+
+    <!-- UI Custom Toast para simular envío sin usar alert() -->
+    <div id="toast" class="fixed bottom-8 left-1/2 z-50 bg-tech-card border border-tech-cyan text-white px-6 py-3 rounded-md shadow-[0_0_20px_rgba(0,240,255,0.2)] flex items-center gap-3">
+        <i class="ph-fill ph-check-circle text-tech-cyan text-xl"></i>
+        <span>Redirigiendo a WhatsApp...</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Mobile Menu Logic
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const closeMenuBtn = document.getElementById('close-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileOverlay = document.getElementById('mobile-menu-overlay');
+            const mobileLinks = document.querySelectorAll('.mobile-link');
+            const navbar = document.getElementById('navbar');
+
+            let menuOpen = false;
+            let isAnimating = false;
+            let scrollLockPosition = 0;
+            const MENU_TRANSITION_MS = 400;
+
+            function lockScroll() {
+                scrollLockPosition = window.scrollY;
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${scrollLockPosition}px`;
+                document.body.style.left = '0';
+                document.body.style.right = '0';
+                document.body.style.width = '100%';
+            }
+
+            function unlockScroll() {
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.left = '';
+                document.body.style.right = '';
+                document.body.style.width = '';
+                window.scrollTo(0, scrollLockPosition);
+            }
+
+            function setMenuState(open) {
+                // Evita dobles clics / estados inconsistentes mientras anima
+                if (isAnimating || open === menuOpen) return;
+                isAnimating = true;
+                menuOpen = open;
+
+                mobileMenuBtn.setAttribute('aria-expanded', String(open));
+                mobileMenuBtn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+
+                if (open) {
+                    lockScroll();
+                    mobileMenu.removeAttribute('inert');
+                    mobileOverlay.classList.add('is-open');
+                    mobileMenu.classList.add('is-open');
+                    // Mueve el foco al primer enlace para accesibilidad
+                    window.setTimeout(() => {
+                        closeMenuBtn.focus({ preventScroll: true });
+                    }, 50);
+                } else {
+                    unlockScroll();
+                    mobileOverlay.classList.remove('is-open');
+                    mobileMenu.classList.remove('is-open');
+                    window.setTimeout(() => {
+                        mobileMenu.setAttribute('inert', '');
+                    }, MENU_TRANSITION_MS);
+                }
+
+                window.setTimeout(() => {
+                    isAnimating = false;
+                }, MENU_TRANSITION_MS);
+            }
+
+            function toggleMenu() {
+                setMenuState(!menuOpen);
+            }
+
+            mobileMenuBtn.addEventListener('click', toggleMenu);
+            closeMenuBtn.addEventListener('click', () => setMenuState(false));
+
+            // Tocar el overlay cierra el menú
+            mobileOverlay.addEventListener('click', () => setMenuState(false));
+
+            // Cerrar con Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && menuOpen) setMenuState(false);
+            });
+
+            // Close menu on link click
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => setMenuState(false));
+            });
+
+            // Si el viewport pasa a Desktop con el menú abierto, ciérralo
+            const desktopMediaQuery = window.matchMedia('(min-width: 768px)');
+            desktopMediaQuery.addEventListener('change', (e) => {
+                if (e.matches && menuOpen) setMenuState(false);
+            });
+
+            // 2. Navbar Scroll Effect
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('shadow-lg', 'bg-tech-dark/95');
+                    navbar.classList.remove('bg-tech-dark/80');
+                } else {
+                    navbar.classList.remove('shadow-lg', 'bg-tech-dark/95');
+                    navbar.classList.add('bg-tech-dark/80');
+                }
+            });
+
+            // 3. Scroll Reveal Animations (Intersection Observer)
+            const revealElements = document.querySelectorAll('.reveal');
+            
+            // Check if user prefers reduced motion
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (!prefersReducedMotion && 'IntersectionObserver' in window) {
+                const revealObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('active');
+                            observer.unobserve(entry.target); // Animar solo una vez
+                        }
+                    });
+                }, {
+                    root: null,
+                    threshold: 0.15,
+                    rootMargin: "0px 0px -50px 0px"
+                });
+
+                revealElements.forEach(el => revealObserver.observe(el));
+            } else {
+                // Fallback: mostrar todos los elementos inmediatamente
+                revealElements.forEach(el => el.classList.add('active'));
+            }
+
+            // 4. Form Submission -> Redirige a WhatsApp con mensaje creativo
+            const contactForm = document.getElementById('contactForm');
+            const toast = document.getElementById('toast');
+            const WHATSAPP_NUMBER = '573126010398'; // Colombia +57
+
+            if(contactForm) {
+                contactForm.addEventListener('submit', (e) => {
+                    e.preventDefault(); // Evitar recarga
+
+                    const nombre = document.getElementById('name').value.trim();
+                    const email = document.getElementById('email').value.trim();
+                    const asunto = document.getElementById('subject').value.trim();
+                    const mensaje = document.getElementById('message').value.trim();
+
+                    const textoWhatsapp =
+`¡Hola Jessica! 👋 Soy *${nombre}* y quiero contactarte a través de tu portafolio.
+
+📧 *Mi correo:* ${email}
+📌 *Asunto:* ${asunto}
+
+📝 *Mensaje:*
+${mensaje}
+
+¡Quedo atento(a) a tu respuesta! 🚀`;
+
+                    const urlWhatsapp = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(textoWhatsapp)}`;
+
+                    // Mostrar Toast antes de redirigir
+                    toast.classList.add('show');
+
+                    setTimeout(() => {
+                        window.open(urlWhatsapp, '_blank');
+                        toast.classList.remove('show');
+                        contactForm.reset();
+                    }, 900);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

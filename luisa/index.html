@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creaciones Luisart - Arte hecho a mano</title>
+  <meta name="description" content="Creaciones Luisart: Arte hecho a mano con amor. Crochet, cerámica artística y creaciones totalmente personalizadas en Bogotá.">
+  
+  <!-- Favicon actualizado -->
+  <link rel="icon" type="image/jpeg" href="https://i.ibb.co/pj8V8TZ9/creaciones-luisart.jpg" />
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#F6F3EB',
+              text: '#362E2B',
+              accent: '#E59A01',
+              secondary: '#B9B9B6',
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'blob': 'blob 7s infinite',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'fade-in': 'fade-in 0.5s ease-out',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0) rotate(-2deg)' },
+              '50%': { transform: 'translateY(-15px) rotate(2deg)' },
+            },
+            blob: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+              '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' },
+            },
+            'fade-in': {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      overflow-x: hidden;
+      background-color: #F6F3EB;
+      color: #362E2B;
+    }
+    html { 
+      scroll-behavior: smooth; 
+    }
+    
+    /* Pantalla de carga */
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: #F6F3EB;
+      z-index: 99999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 0.6s ease-out;
+    }
+    .loader-logo {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      box-shadow: 0 10px 30px rgba(229, 154, 1, 0.2);
+      animation: pulse-slow 2s infinite;
+    }
+
+    .glass-nav { 
+      background: rgba(246, 243, 235, 0.85); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px); 
+      border-bottom: 1px solid rgba(185, 185, 182, 0.2); 
+    }
+    .fade-up { 
+      opacity: 0; 
+      transform: translateY(30px); 
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+    }
+    .fade-up.visible { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+    
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #F6F3EB; }
+    ::-webkit-scrollbar-thumb { background: #B9B9B6; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #E59A01; }
+    
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="transition-colors duration-300">
+  
+  <div id="loader">
+    <img src="https://i.ibb.co/pj8V8TZ9/creaciones-luisart.jpg" class="loader-logo" alt="Cargando Creaciones Luisart..." />
+  </div>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const LOGO_URL = "https://i.ibb.co/pj8V8TZ9/creaciones-luisart.jpg";
+    const WHATSAPP_NUMBER = "573143413326";
+    const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
+    const INSTAGRAM_LINK = "https://instagram.com/creaciones_luisart";
+
+    const PRODUCTS = [
+      { id: 1, name: "Amigurumi Homero Simpson", price: 85000, category: "Crochet", desc: "Muñeco tejido totalmente a mano inspirado en Homero Simpson. Materiales hipoalergénicos.", image: "https://i.ibb.co/35nLmpzz/luisa-martinez-2.jpg", badge: "Destacado" },
+      { id: 2, name: "Alcancía Personalizada", price: 45000, category: "Cerámica", desc: "Alcancía de cerámica artística pintada a mano. Elige tu diseño o personaje favorito.", image: "https://i.ibb.co/JwQwtH55/luisa-martinez-1.png", badge: "Popular" },
+      { id: 3, name: "Amigurumi Marge Simpson", price: 90000, category: "Crochet", desc: "La icónica Marge Simpson en versión crochet. Un regalo único y especial.", image: "https://i.ibb.co/xtY6SRRp/luisa-martinez-2.png" },
+      { id: 4, name: "Muñeco Personalizado", price: 110000, category: "Personalizado", desc: "Tejemos a esa persona especial, mascota o personaje que imagines a partir de una foto.", image: "https://i.ibb.co/BH8TM9hF/luisa-martinez-3.png", badge: "Más Vendido" },
+      { id: 5, name: "Figura Mario Bros", price: 55000, category: "Cerámica", desc: "Figura decorativa de Mario Bros en cerámica, modelada y pintada artesanalmente.", image: "https://i.ibb.co/xKnvQ815/luisa-martinez-4.png" },
+      { id: 6, name: "Figura Charmander", price: 50000, category: "Cerámica", desc: "Para los fans de Pokémon, figura de Charmander pintada a mano con amor.", image: "https://i.ibb.co/dH75cmv/luisa-martinez-5.png" },
+      { id: 7, name: "Virgen de Guadalupe", price: 75000, category: "Cerámica", desc: "Figura religiosa con detalles dorados, pintada con máxima delicadeza.", image: "https://i.ibb.co/BH8TM9hF/luisa-martinez-3.png", badge: "Elegante" },
+      { id: 8, name: "Figura Escandalosos", price: 60000, category: "Cerámica", desc: "Los amados osos Escandalosos en una sola pieza de cerámica artística.", image: "https://i.ibb.co/BH8TM9hF/luisa-martinez-3.png" },
+      { id: 9, name: "Mascota en Cerámica", price: 85000, category: "Personalizado", desc: "Envíanos la foto de tu mascota y la inmortalizamos en una figura de cerámica pintada.", image: "https://i.ibb.co/BH8TM9hF/luisa-martinez-3.png", badge: "Exclusivo" },
+      { id: 10, name: "Piezas para Pintar", price: 25000, category: "Cerámica", desc: "Lleva la pieza de cerámica en blanco y despierta tu lado artístico pintándola en casa.", image: "https://i.ibb.co/BH8TM9hF/luisa-martinez-3.png" }
+    ];
+
+    const formatPrice = (price) => {
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(price);
+    };
+
+    const Icons = {
+      Cart: ({ className = "w-6 h-6" }) => (<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>),
+      Heart: ({ className = "w-6 h-6", filled = false }) => (<svg className={className} fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>),
+      Search: ({ className = "w-5 h-5" }) => (<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>),
+      Close: ({ className = "w-6 h-6" }) => (<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>),
+      WhatsApp: ({ className = "w-6 h-6" }) => (<svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 0 5.385 0 12.031c0 2.12.551 4.185 1.597 6.002L.013 24l6.113-1.603c1.748.951 3.719 1.453 5.905 1.453 6.646 0 12.031-5.385 12.031-12.031S18.677 0 12.031 0zm0 21.849c-1.785 0-3.53-.479-5.062-1.385l-.362-.214-3.766.988.997-3.673-.235-.373a9.972 9.972 0 01-1.523-5.343c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10zm5.496-7.514c-.302-.151-1.786-.882-2.063-.983-.277-.101-.479-.151-.68.151-.202.302-.781.983-.958 1.185-.176.202-.353.227-.655.076-1.558-.787-2.735-1.728-3.805-3.23-.209-.294-.022-.452.128-.603.136-.135.302-.353.453-.529.151-.176.202-.302.302-.504.101-.202.05-.378-.025-.529-.076-.151-.68-1.639-.933-2.244-.246-.593-.496-.513-.68-.522h-.58c-.202 0-.529.076-.806.378-.277.302-1.058 1.034-1.058 2.52 0 1.487 1.083 2.924 1.234 3.125.151.202 2.128 3.25 5.155 4.557.72.31 1.282.496 1.72.635.723.23 1.382.197 1.902.12.584-.086 1.786-.73 2.038-1.436.252-.705.252-1.31.176-1.436-.076-.126-.277-.202-.579-.353z"/></svg>),
+      Instagram: ({ className = "w-6 h-6" }) => (<svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.7-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>),
+      Check: ({ className = "w-5 h-5" }) => (<svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>),
+      Sparkle: ({ className = "w-5 h-5" }) => (<svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z"/></svg>)
+    };
+
+    const Toast = ({ message, type, onClose }) => {
+      useEffect(() => {
+        const timer = setTimeout(onClose, 3000);
+        return () => clearTimeout(timer);
+      }, [onClose]);
+
+      return (
+        <div className="fixed bottom-24 right-5 z-50 animate-[fade-in_0.3s_ease-out]">
+          <div className={`flex items-center px-5 py-4 rounded-2xl shadow-xl text-white ${type === 'error' ? 'bg-red-500' : 'bg-brand-text border border-brand-secondary/30'}`}>
+            <Icons.Check className={`mr-2 ${type === 'error' ? 'text-white' : 'text-brand-accent'}`} />
+            <span className="font-bold text-sm tracking-wide">{message}</span>
+          </div>
+        </div>
+      );
+    };
+
+    function App() {
+      const [cart, setCart] = useState([]);
+      const [wishlist, setWishlist] = useState([]);
+      const [isCartOpen, setIsCartOpen] = useState(false);
+      const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [activeFilter, setActiveFilter] = useState('Todos');
+      const [toast, setToast] = useState(null);
+      
+      const sectionRefs = useRef([]);
+
+      useEffect(() => {
+        // Ocultar loader cuando React monta
+        const loader = document.getElementById('loader');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.style.display = 'none', 600);
+        }
+      }, []);
+
+      const filteredProducts = PRODUCTS.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilter = activeFilter === 'Todos' || p.category === activeFilter;
+        return matchesSearch && matchesFilter;
+      });
+
+      useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+            }
+          });
+        }, { threshold: 0.1 });
+
+        sectionRefs.current.forEach(ref => {
+          if (ref) observer.observe(ref);
+        });
+
+        return () => observer.disconnect();
+      }, [filteredProducts]);
+
+      const addToRefs = (el) => {
+        if (el && !sectionRefs.current.includes(el)) {
+          sectionRefs.current.push(el);
+        }
+      };
+
+      const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+      };
+
+      const addToCart = (product) => {
+        const existing = cart.find(item => item.id === product.id);
+        if (existing) {
+          setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
+        } else {
+          setCart([...cart, { ...product, qty: 1 }]);
+        }
+        showToast(`${product.name} agregado al carrito`);
+        setIsCartOpen(true);
+      };
+
+      const updateCartQty = (id, delta) => {
+        setCart(cart.map(item => {
+          if (item.id === id) {
+            return { ...item, qty: Math.max(1, item.qty + delta) };
+          }
+          return item;
+        }));
+      };
+
+      const removeFromCart = (id) => {
+        setCart(cart.filter(item => item.id !== id));
+      };
+
+      const toggleWishlist = (id) => {
+        if (wishlist.includes(id)) {
+          setWishlist(wishlist.filter(itemId => itemId !== id));
+        } else {
+          setWishlist([...wishlist, id]);
+          showToast('Agregado a favoritos');
+        }
+      };
+
+      const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+      const cartCount = cart.reduce((acc, item) => acc + item.qty, 0);
+
+      const filterOptions = ['Todos', 'Crochet', 'Cerámica', 'Personalizado'];
+
+      const Navbar = () => (
+        <nav className="fixed w-full z-40 top-0 transition-all duration-300 glass-nav shadow-sm">
+          <div className="bg-brand-accent text-white text-xs sm:text-sm font-bold py-2 text-center px-4 flex justify-center items-center gap-2 tracking-wide">
+            <Icons.Sparkle className="w-4 h-4" />
+            <span>Arte, Crochet y Cerámica - Trabajos hechos con amor</span>
+            <Icons.Sparkle className="w-4 h-4" />
+          </div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16 sm:h-20">
+              
+              <a href="#inicio" className="flex items-center space-x-3 group active:scale-95 transition-transform duration-200">
+                <img 
+                  src={LOGO_URL} 
+                  alt="Creaciones Luisart Logo" 
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-cover rounded-full shadow-md border-2 border-brand-accent/20 group-hover:border-brand-accent transition-all duration-300"
+                />
+                <span className="font-extrabold text-lg sm:text-xl text-brand-text tracking-tight hidden sm:block">Creaciones Luisart</span>
+              </a>
+              
+              <div className="hidden md:flex space-x-8">
+                <a href="#inicio" className="font-bold text-brand-text/80 hover:text-brand-accent transition-colors">Inicio</a>
+                <a href="#personalizados" className="font-bold text-brand-text/80 hover:text-brand-accent transition-colors">Personalizados</a>
+                <a href="#catalogo" className="font-bold text-brand-text/80 hover:text-brand-accent transition-colors">Productos</a>
+                <a href="#nosotros" className="font-bold text-brand-text/80 hover:text-brand-accent transition-colors">Nosotros</a>
+              </div>
+
+              <div className="flex items-center space-x-4 sm:space-x-5">
+                <button className="relative text-brand-text/80 hover:text-brand-accent active:scale-90 transition-all hidden sm:block">
+                  <Icons.Heart />
+                  {wishlist.length > 0 && <span className="absolute -top-1 -right-2 bg-brand-accent text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{wishlist.length}</span>}
+                </button>
+                <button className="relative text-brand-text/80 hover:text-brand-accent active:scale-90 transition-all" onClick={() => setIsCartOpen(true)}>
+                  <Icons.Cart />
+                  {cartCount > 0 && <span className="absolute -top-2 -right-2 bg-brand-text text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md animate-bounce">{cartCount}</span>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+      );
+
+      const ProductCard = ({ product }) => {
+        const isWishlisted = wishlist.includes(product.id);
+
+        return (
+          <div className="group bg-white rounded-[30px] shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden border border-brand-secondary/20 flex flex-col h-full fade-up relative" ref={addToRefs}>
+            <div className="relative overflow-hidden aspect-square bg-brand-bg/50 flex items-center justify-center border-b border-brand-secondary/10">
+              
+              <div className="absolute inset-0 bg-gradient-to-tr from-brand-accent/0 to-brand-accent/0 group-hover:from-brand-accent/5 group-hover:to-transparent transition-all duration-500 z-0"></div>
+
+              <img src={product.image} alt={product.name} className="w-full h-full object-cover relative z-10 group-hover:scale-105 transition-transform duration-700 ease-out" />
+              
+              <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
+                {product.badge && <span className="bg-brand-text text-brand-bg text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-md">{product.badge}</span>}
+              </div>
+
+              <button onClick={() => toggleWishlist(product.id)} className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-md rounded-full shadow-sm hover:scale-110 active:scale-90 transition-all z-20 text-brand-secondary">
+                <Icons.Heart filled={isWishlisted} className={isWishlisted ? "text-brand-accent w-5 h-5" : "w-5 h-5"} />
+              </button>
+              
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-24 pb-6 px-4 flex items-end justify-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-20">
+                 <div className="w-full bg-white p-5 rounded-2xl shadow-2xl transform scale-95 group-hover:scale-100 transition-transform duration-500 delay-100 text-center">
+                    <p className="text-sm font-bold text-brand-text mb-3">Pieza artesanal única</p>
+                    <button onClick={() => addToCart(product)} className="w-full bg-brand-accent text-white py-3 rounded-xl text-sm font-bold hover:bg-[#cc8901] transition-colors shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                      <Icons.Cart className="w-4 h-4"/> Agregar al pedido
+                    </button>
+                 </div>
+              </div>
+            </div>
+            
+            <div className="p-6 flex-1 flex flex-col justify-between bg-white z-10 relative">
+              <div>
+                <div className="flex justify-between items-start mb-3 gap-3">
+                  <h3 className="font-extrabold text-lg text-brand-text leading-tight group-hover:text-brand-accent transition-colors">{product.name}</h3>
+                  <span className="font-black text-brand-accent text-lg whitespace-nowrap">{formatPrice(product.price)}</span>
+                </div>
+                <p className="text-sm text-brand-text/70 line-clamp-2 mb-5 font-medium leading-relaxed">{product.desc}</p>
+              </div>
+              <div className="flex items-center text-[11px] font-black text-brand-secondary uppercase tracking-wider">
+                <span className="bg-brand-bg px-3 py-1.5 rounded-lg text-brand-text/80">{product.category}</span>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const CartSidebar = () => (
+        <>
+          <div className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity duration-400 ${isCartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCartOpen(false)} />
+          
+          <div className={`fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white z-50 shadow-2xl transform transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+            <div className="px-6 py-6 border-b border-brand-secondary/20 flex justify-between items-center bg-white">
+              <h2 className="text-2xl font-extrabold text-brand-text flex items-center">
+                <Icons.Cart className="mr-3 text-brand-accent w-7 h-7" /> Tu Pedido ({cartCount})
+              </h2>
+              <button onClick={() => setIsCartOpen(false)} className="p-2.5 bg-brand-bg rounded-full text-brand-text/70 hover:text-brand-accent transition-all active:scale-90">
+                <Icons.Close className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-brand-bg/50">
+              {cart.length === 0 ? (
+                <div className="text-center text-brand-text/50 mt-32 flex flex-col items-center">
+                  <div className="w-28 h-28 bg-white shadow-sm rounded-full flex items-center justify-center mb-6 border border-brand-secondary/20">
+                    <Icons.Sparkle className="w-14 h-14 opacity-40" />
+                  </div>
+                  <p className="text-xl font-bold mb-6 text-brand-text">Tu carrito está vacío</p>
+                  <button onClick={() => setIsCartOpen(false)} className="px-8 py-3.5 bg-brand-accent text-white font-bold rounded-xl hover:bg-[#cc8901] transition-colors shadow-lg active:scale-95">
+                    Descubrir Arte
+                  </button>
+                </div>
+              ) : (
+                cart.map((item, idx) => (
+                  <div key={`${item.id}-${idx}`} className="flex gap-4 bg-white border border-brand-secondary/20 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-24 h-24 bg-brand-bg/50 rounded-xl flex items-center justify-center overflow-hidden">
+                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-extrabold text-sm text-brand-text leading-tight pr-4">{item.name}</h4>
+                          <button onClick={() => removeFromCart(item.id)} className="text-brand-secondary hover:text-red-500 transition-colors bg-brand-bg p-1.5 rounded-md active:scale-90"><Icons.Close className="w-4 h-4" /></button>
+                        </div>
+                        <p className="text-xs text-brand-text/60 font-bold mt-1">Cant: {item.qty}</p>
+                      </div>
+                      <div className="flex justify-between items-center mt-3">
+                        <div className="flex items-center bg-brand-bg border border-brand-secondary/30 rounded-lg p-1">
+                          <button onClick={() => updateCartQty(item.id, -1)} className="w-7 h-7 flex items-center justify-center text-brand-text/70 hover:text-brand-accent font-bold active:scale-90">-</button>
+                          <span className="w-8 text-center text-sm font-black text-brand-text">{item.qty}</span>
+                          <button onClick={() => updateCartQty(item.id, 1)} className="w-7 h-7 flex items-center justify-center text-brand-text/70 hover:text-brand-accent font-bold active:scale-90">+</button>
+                        </div>
+                        <span className="font-black text-base text-brand-accent">{formatPrice(item.price * item.qty)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {cart.length > 0 && (
+              <div className="p-6 border-t border-brand-secondary/20 bg-white shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+                <p className="text-xs text-brand-text/60 text-center mb-4 italic">Al completar el pedido, te redirigiremos a WhatsApp para confirmar los detalles.</p>
+                <div className="flex justify-between mb-3 text-brand-text/70 font-bold text-sm">
+                  <span>Subtotal ({cartCount} piezas)</span>
+                  <span>{formatPrice(cartTotal)}</span>
+                </div>
+                <div className="flex justify-between mb-6 font-black text-2xl text-brand-text">
+                  <span>Total</span>
+                  <span className="text-brand-accent">{formatPrice(cartTotal)}</span>
+                </div>
+                <button onClick={() => { setIsCartOpen(false); setIsCheckoutOpen(true); }} className="w-full bg-brand-text hover:bg-brand-accent text-brand-bg hover:text-white font-black py-4.5 rounded-xl transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2 text-lg">
+                  Completar Pedido <span className="text-xl">→</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      );
+
+      const CheckoutModal = () => {
+        const [formData, setFormData] = useState({
+          nombre: '', apellidos: '', telefono: '', direccion: '', ciudad: '', metodoPago: 'Transferencia Bancaria'
+        });
+
+        const handleInputChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          let msg = `*🛍️ NUEVO PEDIDO - CREACIONES LUISART* ✨\n\n`;
+          msg += `*Datos del Cliente:*\n`;
+          msg += `👤 ${formData.nombre} ${formData.apellidos}\n`;
+          msg += `📱 ${formData.telefono}\n`;
+          msg += `📍 ${formData.direccion}, ${formData.ciudad}\n\n`;
+          msg += `*Piezas Seleccionadas:*\n`;
+          
+          cart.forEach(item => {
+            msg += `🎨 ${item.qty}x ${item.name} - ${formatPrice(item.price * item.qty)}\n`;
+          });
+          
+          msg += `\n💰 *Total estimado:* ${formatPrice(cartTotal)}\n`;
+          msg += `💳 *Método de pago preferido:* ${formData.metodoPago}\n\n`;
+          msg += `_¡Hola! Quiero confirmar mi pedido. Quedo atento/a para coordinar los detalles. ¡Gracias!_`;
+
+          const encodedMsg = encodeURIComponent(msg);
+          window.open(`${WHATSAPP_LINK}?text=${encodedMsg}`, '_blank');
+          
+          setCart([]);
+          setIsCheckoutOpen(false);
+          showToast('Redirigiendo a WhatsApp para confirmar...', 'success');
+        };
+
+        if (!isCheckoutOpen) return null;
+
+        return (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto pt-20">
+            <div className="bg-white w-full max-w-4xl rounded-[32px] shadow-2xl overflow-hidden my-8 flex flex-col md:flex-row relative animate-[fade-in_0.4s_ease-out]">
+              
+              <div className="flex-1 p-8 md:p-10">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-3xl font-extrabold text-brand-text tracking-tight">Detalles de Entrega</h2>
+                  <button onClick={() => setIsCheckoutOpen(false)} className="text-brand-secondary hover:text-brand-accent bg-brand-bg p-2.5 rounded-full active:scale-90 transition-all"><Icons.Close /></button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <input required type="text" name="nombre" placeholder="Nombre(s)" onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-brand-secondary/30 bg-brand-bg/50 text-brand-text focus:ring-2 focus:ring-brand-accent outline-none transition-all font-semibold" />
+                    <input required type="text" name="apellidos" placeholder="Apellidos" onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-brand-secondary/30 bg-brand-bg/50 text-brand-text focus:ring-2 focus:ring-brand-accent outline-none transition-all font-semibold" />
+                  </div>
+                  <input required type="tel" name="telefono" placeholder="WhatsApp / Teléfono celular" onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-brand-secondary/30 bg-brand-bg/50 text-brand-text focus:ring-2 focus:ring-brand-accent outline-none transition-all font-semibold" />
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                     <input required type="text" name="direccion" placeholder="Dirección de entrega" onChange={handleInputChange} className="w-full sm:col-span-2 px-5 py-4 rounded-xl border border-brand-secondary/30 bg-brand-bg/50 text-brand-text focus:ring-2 focus:ring-brand-accent outline-none transition-all font-semibold" />
+                     <input required type="text" name="ciudad" placeholder="Ciudad" onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-brand-secondary/30 bg-brand-bg/50 text-brand-text focus:ring-2 focus:ring-brand-accent outline-none transition-all font-semibold" />
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="block text-sm font-extrabold text-brand-text mb-3">Método de pago preferido</label>
+                    <select name="metodoPago" onChange={handleInputChange} className="w-full px-5 py-4 rounded-xl border border-brand-secondary/30 bg-brand-bg/50 text-brand-text focus:ring-2 focus:ring-brand-accent outline-none transition-all font-semibold cursor-pointer">
+                      <option value="Transferencia Bancaria">Transferencia Bancaria</option>
+                      <option value="Nequi">Nequi</option>
+                      <option value="Daviplata">Daviplata</option>
+                      <option value="Efectivo">Efectivo (Contra Entrega si aplica)</option>
+                    </select>
+                  </div>
+                  
+                  <button type="submit" className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white font-extrabold py-4.5 rounded-xl transition-all shadow-lg shadow-green-500/30 flex justify-center items-center gap-3 text-lg mt-8 active:scale-95">
+                    <Icons.WhatsApp className="w-7 h-7"/> Enviar pedido por WhatsApp
+                  </button>
+                </form>
+              </div>
+
+              <div className="md:w-[380px] bg-brand-bg p-8 md:p-10 border-t md:border-t-0 md:border-l border-brand-secondary/20 flex flex-col">
+                <h3 className="font-extrabold text-xl mb-6 text-brand-text border-b border-brand-secondary/20 pb-4">Resumen</h3>
+                <div className="flex-1 space-y-5 overflow-y-auto mb-6 pr-2 scrollbar-hide max-h-[300px]">
+                  {cart.map((item, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className="w-20 h-20 bg-white rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-brand-secondary/20">
+                         <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <p className="text-sm font-extrabold text-brand-text leading-tight mb-1">{item.name}</p>
+                        <p className="text-xs text-brand-text/60 font-bold">Cant: {item.qty}</p>
+                        <p className="text-sm font-black text-brand-accent mt-1">{formatPrice(item.price * item.qty)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-secondary/20">
+                  <div className="flex justify-between text-sm text-brand-text/70 mb-3 font-bold">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(cartTotal)}</span>
+                  </div>
+                  <div className="border-t border-brand-secondary/20 pt-4 flex justify-between font-black text-2xl text-brand-text">
+                    <span>Total</span>
+                    <span className="text-brand-accent">{formatPrice(cartTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      return (
+        <div className="pt-20 sm:pt-28">
+          {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+          <Navbar />
+          <CartSidebar />
+          <CheckoutModal />
+
+          <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-2xl shadow-green-500/40 hover:scale-110 active:scale-95 transition-all duration-300 animate-bounce">
+            <Icons.WhatsApp className="w-8 h-8" />
+          </a>
+
+          {}
+          <section id="inicio" className="relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12 lg:py-20 overflow-hidden">
+            <div className="absolute top-0 -left-4 w-72 h-72 bg-brand-accent rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob pointer-events-none"></div>
+            <div className="absolute top-0 -right-4 w-72 h-72 bg-brand-secondary rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-brand-accent rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000 pointer-events-none"></div>
+
+            <div className="bg-white rounded-[40px] p-8 lg:p-16 relative border border-brand-secondary/20 shadow-2xl shadow-brand-secondary/10 z-10">
+               <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
+                  <div className="text-center lg:text-left fade-up" ref={addToRefs}>
+                    <div className="inline-flex items-center gap-2 bg-brand-bg px-5 py-2.5 rounded-full text-sm font-black shadow-sm text-brand-accent mb-8 border border-brand-secondary/20">
+                       <Icons.Sparkle className="w-4 h-4"/> Creaciones Luisart
+                    </div>
+                    <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tighter mb-6 text-brand-text leading-[1.1]">
+                      Arte hecho a mano<br/>
+                      <span className="text-brand-accent">con amor.</span>
+                    </h1>
+                    <p className="text-lg text-brand-text/70 mb-10 max-w-xl mx-auto lg:mx-0 font-medium leading-relaxed">
+                      Crochet, cerámica artística y creaciones totalmente personalizadas. Convertimos tu idea en una pieza única, artesanal e inolvidable.
+                    </p>
+                    <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+                      <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="bg-brand-accent text-white font-extrabold px-8 py-4.5 rounded-2xl shadow-xl hover:bg-[#cc8901] transition-all hover:-translate-y-1 active:scale-95 text-center text-lg flex items-center justify-center gap-2">
+                        <Icons.WhatsApp className="w-6 h-6"/> Solicitar por WhatsApp
+                      </a>
+                      <a href="#catalogo" className="bg-white text-brand-text border-2 border-brand-secondary/30 font-extrabold px-10 py-4.5 rounded-2xl shadow-sm hover:bg-brand-bg transition-all active:scale-95 text-center text-lg">
+                        Ver Productos
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div className="relative fade-up hidden md:block" ref={addToRefs}>
+                    <div className="relative w-full h-[550px] flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-tr from-brand-accent/20 to-transparent rounded-full blur-3xl opacity-50"></div>
+                      <img 
+                        src="https://i.ibb.co/3yhW0Lth/luisa-martinez-1.jpg" 
+                        alt="Artesanía y Crochet" 
+                        className="relative z-10 w-full h-full object-cover rounded-[40px] transform hover:scale-105 transition-all duration-700 ease-out shadow-2xl animate-float border-4 border-white" 
+                        style={{ filter: 'drop-shadow(0 30px 40px rgba(54, 46, 43, 0.1))' }} 
+                      />
+                    </div>
+                  </div>
+               </div>
+            </div>
+          </section>
+
+          {}
+          <section id="personalizados" className="py-24 bg-brand-accent text-white relative overflow-hidden mt-12">
+            <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'}}></div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center fade-up" ref={addToRefs}>
+               <h2 className="text-4xl md:text-5xl font-extrabold mb-6 flex justify-center items-center gap-3">
+                 <Icons.Sparkle className="w-8 h-8"/> Trabajos Personalizados <Icons.Sparkle className="w-8 h-8"/>
+               </h2>
+               <p className="text-2xl font-medium mb-6 italic text-brand-bg">"Dame tu idea y crearemos algo lindo."</p>
+               <p className="text-lg max-w-3xl mx-auto mb-10 font-medium leading-relaxed">
+                 ¿Tienes en mente un personaje específico, quieres inmortalizar a tu mascota o buscas un regalo completamente único? Realizamos proyectos 100% personalizados en crochet y cerámica. Nos adaptamos a tus ideas para crear piezas llenas de magia y significado.
+               </p>
+               <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 bg-white text-brand-text font-extrabold px-10 py-5 rounded-2xl shadow-xl hover:scale-105 transition-transform active:scale-95 text-lg">
+                 <Icons.WhatsApp className="w-7 h-7 text-brand-accent"/>
+                 Cotizar mi idea por WhatsApp
+               </a>
+            </div>
+          </section>
+
+          {}
+          <section id="catalogo" className="py-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 fade-up" ref={addToRefs}>
+                <div>
+                  <h2 className="text-4xl md:text-5xl font-extrabold mb-4 text-brand-text tracking-tight">Nuestro <span className="text-brand-accent">Arte</span></h2>
+                  <p className="text-brand-text/70 font-bold flex items-center gap-2">
+                     <Icons.Sparkle className="text-brand-accent w-5 h-5"/> Piezas únicas, listas para enamorar.
+                  </p>
+                </div>
+                
+                <div className="relative w-full md:w-96">
+                  <input type="text" placeholder="Buscar arte (Ej. Amigurumi, Cerámica)..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-4 py-4 rounded-2xl border border-brand-secondary/30 bg-white text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all font-bold shadow-sm" />
+                  <Icons.Search className="absolute left-4 top-4.5 text-brand-secondary w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="flex gap-3 overflow-x-auto pb-4 mb-10 w-full scrollbar-hide fade-up" ref={addToRefs}>
+                {filterOptions.map(filter => (
+                  <button key={filter} onClick={() => setActiveFilter(filter)} className={`whitespace-nowrap px-8 py-3 rounded-xl text-sm font-black transition-all active:scale-95 ${activeFilter === filter ? 'bg-brand-text text-brand-bg shadow-xl' : 'bg-white text-brand-text/70 hover:bg-brand-bg border border-brand-secondary/30 shadow-sm'}`}>
+                    {filter}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+                {filteredProducts.length > 0 ? (
+                  filteredProducts.map(product => <ProductCard key={product.id} product={product} />)
+                ) : (
+                  <div className="col-span-full text-center py-32 bg-white rounded-[30px] border border-brand-secondary/20 shadow-sm">
+                    <Icons.Search className="w-20 h-20 mx-auto mb-6 text-brand-secondary" />
+                    <p className="text-xl font-extrabold text-brand-text/60">No encontramos resultados para tu búsqueda.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {}
+          <section id="beneficios" className="py-24 bg-white border-y border-brand-secondary/20">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-16 fade-up" ref={addToRefs}>
+                 <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-4">¿Por qué elegirnos?</h2>
+                 <div className="w-24 h-1.5 bg-brand-accent mx-auto rounded-full"></div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8">
+                {[
+                  { icon: "🧶", title: "Hecho a mano", desc: "Cada puntada y trazo hecho con total dedicación." },
+                  { icon: "✨", title: "Productos únicos", desc: "Al ser artesanal, no hay dos piezas iguales." },
+                  { icon: "🎨", title: "Personalización", desc: "Tú lo imaginas, nosotros lo hacemos realidad." },
+                  { icon: "💎", title: "Alta calidad", desc: "Utilizamos excelentes materiales para mayor duración." },
+                  { icon: "🤝", title: "Atención cálida", desc: "Te acompañamos y asesoramos en cada paso." },
+                  { icon: "📦", title: "Entrega segura", desc: "Empacado con amor para que llegue perfecto." }
+                ].map((b, i) => (
+                  <div key={i} className="p-8 rounded-[30px] bg-brand-bg shadow-sm border border-brand-secondary/20 text-center hover:-translate-y-2 hover:shadow-xl transition-all duration-300 fade-up" ref={addToRefs}>
+                    <div className="w-20 h-20 mx-auto bg-white rounded-full flex items-center justify-center text-4xl mb-6 shadow-sm border border-brand-secondary/10">
+                      {b.icon}
+                    </div>
+                    <h3 className="font-extrabold text-xl mb-2 text-brand-text">{b.title}</h3>
+                    <p className="text-sm font-semibold text-brand-text/70">{b.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {}
+          <section id="nosotros" className="py-24 bg-brand-bg relative overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div className="grid md:grid-cols-2 gap-16 items-center fade-up" ref={addToRefs}>
+                <div className="relative order-2 md:order-1">
+                  <div className="absolute -inset-4 bg-white rounded-[45px] shadow-lg transform rotate-3"></div>
+                  <img src={LOGO_URL} alt="Creaciones Luisart" className="relative rounded-[40px] shadow-2xl w-full max-w-md mx-auto object-cover aspect-square border border-brand-secondary/10" />
+                </div>
+                <div className="order-1 md:order-2 text-center md:text-left">
+                  <h2 className="text-4xl md:text-5xl font-extrabold text-brand-text mb-6">Nuestra <span className="text-brand-accent">Historia</span></h2>
+                  <p className="text-lg text-brand-text/80 mb-6 leading-relaxed font-medium">
+                    <strong className="text-brand-text">Creaciones Luisart</strong> es un emprendimiento ubicado en Bogotá dedicado a rescatar y exaltar el valor del arte hecho a mano.
+                  </p>
+                  <p className="text-lg text-brand-text/80 mb-8 leading-relaxed font-medium">
+                    Nos especializamos en técnicas tradicionales como el crochet (amigurumis) y la cerámica artística. Nuestro mayor propósito es convertir cada idea de nuestros clientes en una pieza única, trabajando con dedicación, paciencia y, sobre todo, mucho amor en cada detalle.
+                  </p>
+                  <a href="#catalogo" className="inline-flex bg-brand-text text-brand-bg px-8 py-4 rounded-xl font-extrabold hover:bg-brand-accent transition-colors shadow-lg active:scale-95">
+                    Conocer nuestros productos
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {}
+          <footer className="bg-brand-text text-brand-bg pt-20 pb-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+                <div className="md:col-span-5">
+                  <div className="flex items-center gap-3 mb-6">
+                    <img src={LOGO_URL} alt="Creaciones Luisart Logo" className="h-14 w-14 rounded-full border-2 border-brand-bg object-cover" />
+                    <span className="font-extrabold text-2xl tracking-tight">Creaciones Luisart</span>
+                  </div>
+                  <p className="text-brand-bg/80 font-medium mb-8 pr-4 leading-relaxed">
+                    Arte hecho a mano con amor. Crochet, cerámica artística y creaciones totalmente personalizadas para hacer realidad tus ideas.
+                  </p>
+                </div>
+                
+                <div className="md:col-span-3">
+                  <h4 className="font-extrabold text-lg mb-6 text-brand-accent">Enlaces Rápidos</h4>
+                  <ul className="space-y-4 font-bold text-brand-bg/80">
+                    <li><a href="#inicio" className="hover:text-white transition-colors">Inicio</a></li>
+                    <li><a href="#personalizados" className="hover:text-white transition-colors">Personalizados</a></li>
+                    <li><a href="#catalogo" className="hover:text-white transition-colors">Catálogo de Arte</a></li>
+                    <li><a href="#nosotros" className="hover:text-white transition-colors">Sobre Nosotros</a></li>
+                  </ul>
+                </div>
+
+                <div className="md:col-span-4 bg-white/5 p-8 rounded-[30px] border border-white/10">
+                  <h4 className="font-extrabold text-lg mb-6 flex items-center gap-2 text-brand-accent">Contacto y Pedidos</h4>
+                  <p className="text-sm text-brand-bg/80 mb-6 leading-relaxed">
+                    Realiza tus pedidos directamente por WhatsApp o envíanos un mensaje directo por Instagram.
+                  </p>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 text-brand-bg font-medium hover:text-white transition-colors">
+                       <Icons.WhatsApp className="w-6 h-6 text-[#25D366] flex-shrink-0"/>
+                       <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="text-lg">314 341 3326</a>
+                    </div>
+                    <div className="flex items-center gap-3 text-brand-bg font-medium hover:text-white transition-colors">
+                       <Icons.Instagram className="w-6 h-6 text-brand-bg flex-shrink-0"/>
+                       <a href={INSTAGRAM_LINK} target="_blank" rel="noreferrer">@creaciones_luisart</a>
+                    </div>
+                    <div className="flex items-center gap-3 text-brand-bg/60 font-medium mt-4 pt-4 border-t border-white/10">
+                       <span>📍 Bogotá, Colombia</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm font-bold text-brand-bg/50 gap-4 text-center md:text-left">
+                <p>&copy; {new Date().getFullYear()} Creaciones Luisart. Todos los derechos reservados.</p>
+                <p>Arte hecho a mano en Colombia.</p>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

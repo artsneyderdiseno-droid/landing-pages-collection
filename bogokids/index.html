@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1A1A2E">
+<title>BogoKids - Aprende Inglés en Bici</title>
+<link rel="icon" type="image/png" href="https://i.ibb.co/jP1DXsqT/Bogo-Kids.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --sky: #87CEEB;
+    --sky-deep: #4CB8E8;
+    --grass: #7ED957;
+    --grass-dark: #4CAF50;
+    --dirt: #DEB887;
+    --dirt-dark: #8B4513;
+    --stone: #A9A9A9;
+    --stone-dark: #696969;
+    --night: #1A1A2E;
+    --night-2: #16213E;
+    --gold: #FFD700;
+    --gold-dark: #FFA500;
+    --gem: #00FFFF;
+    --danger: #FF6B6B;
+    --paper: #FFF8DC;
+    --brand-yellow: #FFD23F;
+
+    /* Paleta BogoKids (tomada de la mascota oficial) */
+    --ink: #1F3A68;
+    --ink-soft: #4A5F8C;
+    --brand-red: #E8334A;
+    --brand-orange: #FF7A2F;
+    --skin: #F8DDB6;
+    --sun: #FFD23F;
+    --sun-deep: #E8A800;
+    --cream: #FFF8E9;
+    --cream-2: #EADBB8;
+    --leaf: #5DBB46;
+    --leaf-2: #8BD46A;
+    --ok: #3FB451;
+    --ok-deep: #2A8A3A;
+    --sky-a: #6EC3F5;
+    --sky-b: #C4EAFF;
+
+    --px: 'Baloo 2', system-ui, sans-serif;
+    --pixel: 'Baloo 2', system-ui, sans-serif;
+    --body: 'Nunito', 'Trebuchet MS', system-ui, sans-serif;
+    --pop: cubic-bezier(.34, 1.56, .64, 1);
+    --out: cubic-bezier(.22, 1, .36, 1);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--body);
+    background-color: var(--night);
+    background-image:
+      radial-gradient(2px 2px at 12% 18%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(2px 2px at 84% 12%, rgba(255,255,255,.45), transparent 60%),
+      radial-gradient(1.5px 1.5px at 72% 58%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1.5px 1.5px at 22% 76%, rgba(255,255,255,.3), transparent 60%),
+      radial-gradient(circle at 50% 28%, #22305A 0%, var(--night) 70%);
+    color: #fff;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-attachment: fixed;
+  }
+
+  /* ---------- marco del juego ---------- */
+  #game-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1 0 auto;
+    padding: 0;
+  }
+  @media (min-width: 640px) {
+    #game-container { padding: 20px 0 0; }
+  }
+
+  #game {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 900px;
+    max-width: 520px;
+    background: linear-gradient(180deg, var(--sky-a) 0%, #93D4F8 45%, var(--sky-b) 100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    isolation: isolate;
+  }
+  @media (min-width: 640px) {
+    #game {
+      height: 90vh;
+      height: 90dvh;
+      border-radius: 28px 28px 0 0;
+      border: 8px solid var(--night-2);
+      border-bottom: none;
+    }
+  }
+
+  /* ---------- MUNDO (fondo compartido por todas las pantallas) ---------- */
+  #world { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .sun {
+    position: absolute; top: 15%; right: 7%; width: 58px; height: 58px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 36%, #FFF6C4 0%, var(--sun) 55%, #FFB82E 100%);
+    box-shadow: 0 0 0 9px rgba(255,210,63,.22), 0 0 36px rgba(255,200,40,.55);
+  }
+  .sun::before {
+    content: ''; position: absolute; inset: -26px; border-radius: 50%; z-index: -1;
+    background: repeating-conic-gradient(rgba(255,226,110,.55) 0 9deg, transparent 9deg 30deg);
+    -webkit-mask: radial-gradient(circle, transparent 46%, #000 47%, #000 64%, transparent 72%);
+            mask: radial-gradient(circle, transparent 46%, #000 47%, #000 64%, transparent 72%);
+    animation: spin 40s linear infinite;
+  }
+  .cloud {
+    position: absolute; left: 0; width: var(--w); height: calc(var(--w) * .3);
+    background: #fff; border-radius: 999px; opacity: 0.9;
+    animation: floatCloud linear infinite; will-change: transform;
+  }
+  .cloud::before, .cloud::after { content: ''; position: absolute; background: #fff; border-radius: 50%; }
+  .cloud::before { width: 48%; height: 160%; left: 14%; bottom: 22%; }
+  .cloud::after  { width: 34%; height: 120%; right: 14%; bottom: 28%; }
+  .c1 { --w: 92px;  top: 7%;  animation-duration: 40s; animation-delay: -9s; }
+  .c2 { --w: 124px; top: 27%; animation-duration: 56s; animation-delay: -34s; opacity: .7; }
+  .c3 { --w: 70px;  top: 44%; animation-duration: 47s; animation-delay: -20s; opacity: .55; }
+  @keyframes floatCloud {
+    from { transform: translateX(540px); }
+    to { transform: translateX(-170px); }
+  }
+  .world-hills {
+    position: absolute; left: 0; bottom: 0; width: 100%; height: 30%;
+    transition: opacity .45s ease, transform .45s var(--out);
+  }
+  #game[data-screen="home"] .world-hills { opacity: 0; transform: translateY(24px); }
+  .sun { transition: opacity .4s ease; }
+  #game[data-screen="play"] .sun { opacity: 0; } /* menos distracción mientras se responde */
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- PANTALLAS ---------- */
+  .screen {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+    z-index: 2;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .screen.active { display: flex; animation: screenIn .4s var(--out) both; }
+  @keyframes screenIn { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ---------- bloque base (Botones 3D) ---------- */
+  .block {
+    border: none;
+    border-radius: 16px;
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,.45),
+      inset 0 -4px 0 rgba(0,0,0,.16),
+      0 6px 0 rgba(31,58,104,.28),
+      0 10px 16px rgba(0,0,0,.14);
+    cursor: pointer;
+    transition: transform .16s var(--pop), box-shadow .16s ease, filter .2s ease, background-color .2s ease;
+    font-family: var(--px);
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,.22);
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+  /* Brillo en los botones */
+  .block::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+    transform: skewX(-20deg); transition: 0s; pointer-events: none;
+  }
+  .block:hover::before { left: 150%; transition: 0.7s; }
+  /* Tailwind (CDN) genera la utilidad .block{display:block}, que pisaría estos layouts */
+  .block.btn-big, .block.biome, .block.icon-btn, .block.speaker, .block.opt { display: flex; }
+  .block.btn-sec { display: inline-flex; }
+  .block:active {
+    transform: translateY(5px);
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,.35),
+      inset 0 -2px 0 rgba(0,0,0,.16),
+      0 1px 0 rgba(31,58,104,.28),
+      0 3px 6px rgba(0,0,0,.12);
+  }
+  .block:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+  @media (hover: hover) {
+    .block:hover:not(:disabled):not(.locked) {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow:
+        inset 0 3px 0 rgba(255,255,255,.5),
+        inset 0 -4px 0 rgba(0,0,0,.16),
+        0 9px 0 rgba(31,58,104,.28),
+        0 16px 20px rgba(0,0,0,.16);
+    }
+    .block:hover:not(:disabled):not(.locked):active { transform: translateY(4px) scale(1); }
+  }
+
+  .btn-big {
+    background: linear-gradient(180deg, #FFE36E 0%, var(--sun) 50%, #F5B800 100%);
+    color: var(--ink);
+    text-shadow: 0 2px 0 rgba(255,255,255,.45);
+    padding: 16px 28px;
+    font-size: clamp(20px, 6vw, 27px);
+    line-height: 1.1;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    border-radius: 22px;
+    text-transform: uppercase;
+    box-shadow:
+      inset 0 3px 0 rgba(255,255,255,.6),
+      inset 0 -5px 0 rgba(180,120,0,.35),
+      0 7px 0 var(--ink),
+      0 12px 20px rgba(0,0,0,.2);
+  }
+  .btn-big:active { box-shadow: inset 0 3px 0 rgba(255,255,255,.5), inset 0 -3px 0 rgba(180,120,0,.35), 0 2px 0 var(--ink), 0 4px 8px rgba(0,0,0,.15); }
+  .btn-sec {
+    background: linear-gradient(180deg, #FFFFFF 0%, var(--cream) 100%);
+    color: var(--ink);
+    text-shadow: none;
+    padding: 13px 22px;
+    font-size: 18px;
+    border-radius: 18px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 52px;
+    box-shadow:
+      inset 0 -4px 0 var(--cream-2),
+      0 6px 0 rgba(31,58,104,.3),
+      0 10px 16px rgba(0,0,0,.12);
+  }
+
+  /* ---------- HOME / INTRO ---------- */
+  #home { padding: 0; text-align: center; overflow-x: hidden; }
+  #home.intro { overflow: hidden; }
+
+  .home-head { position: relative; z-index: 3; padding: max(22px, env(safe-area-inset-top)) 16px 0; }
+  .logo {
+    margin: 0;
+    font-family: var(--px);
+    font-weight: 800;
+    font-size: clamp(50px, 16vw, 84px);
+    line-height: 1;
+    letter-spacing: 0;
+    display: flex; justify-content: center; align-items: center; flex-wrap: nowrap; gap: .1em;
+    animation: logoFloat 3.4s ease-in-out infinite;
+  }
+  @keyframes logoFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .logo .w { display: inline-flex; align-items: center; }
+  .logo .l {
+    display: inline-block;
+    color: var(--sun);
+    text-shadow:
+      3px 0 0 var(--ink), -3px 0 0 var(--ink), 0 3px 0 var(--ink), 0 -3px 0 var(--ink),
+      2px 2px 0 var(--ink), -2px 2px 0 var(--ink), 2px -2px 0 var(--ink), -2px -2px 0 var(--ink),
+      0 7px 0 var(--ink), 3px 7px 0 var(--ink), -3px 7px 0 var(--ink),
+      0 12px 14px rgba(0,0,0,.22);
+  }
+  .logo .k1 { color: var(--brand-red); }
+  .logo .k2 { color: var(--brand-orange); }
+  .logo .k3 { color: #fff; }
+  .logo .k4 { color: #3FB6F2; }
+  .logo .o {
+    display: inline-block; width: .66em; height: .66em; margin: .04em .02em 0;
+    filter: drop-shadow(0 4px 0 var(--ink)) drop-shadow(0 8px 8px rgba(0,0,0,.18));
+  }
+  /* Las ruedas del logo giran al apuntar el botón de jugar */
+  #home:has(#btn-play:hover) .logo .o,
+  #home:has(#btn-play:focus-visible) .logo .o { animation: spin 1.1s linear infinite; }
+
+  .tagline {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin: 14px auto 0; padding: 5px 18px 6px;
+    background: var(--ink); color: #fff;
+    font-family: var(--px); font-weight: 800; font-size: clamp(15px, 4.4vw, 19px); line-height: 1.2;
+    border-radius: 999px; box-shadow: 0 4px 0 rgba(0,0,0,.18);
+  }
+  .tagline b { color: var(--sun); font-weight: 800; }
+
+  .spark {
+    position: absolute; width: 18px; height: 18px; opacity: 0; pointer-events: none;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="%23FFFFFF" d="M12 0 C13 8 16 11 24 12 C16 13 13 16 12 24 C11 16 8 13 0 12 C8 11 11 8 12 0Z"/></svg>') center/contain no-repeat;
+  }
+  .spark.s1 { left: 10%; top: 26%; } .spark.s2 { right: 9%; top: 18%; width: 24px; height: 24px; }
+  .spark.s3 { left: 22%; top: 72%; width: 14px; height: 14px; } .spark.s4 { right: 20%; top: 70%; }
+  .spark.s5 { left: 48%; top: 4%; width: 14px; height: 14px; }
+
+  .home-stage { position: relative; flex: 1 1 auto; min-height: 150px; margin-top: -10px; z-index: 1; }
+  .home-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: hidden; }
+
+  .wheel { transform-box: fill-box; transform-origin: center; animation: spin .7s linear infinite; }
+  .crank-spin { transform-box: fill-box; transform-origin: center; animation: spin .7s linear infinite; }
+  .rider-bob { animation: riderBob .35s ease-in-out infinite alternate; }
+  @keyframes riderBob { from { transform: translateY(0); } to { transform: translateY(-1.3px); } }
+  .road-line { animation: roadDash .7s linear infinite; }
+  @keyframes roadDash { to { stroke-dashoffset: 30; } }
+  .speed { opacity: 0; }
+  .tree { transform-box: fill-box; transform-origin: 50% 100%; }
+
+  .home-panel {
+    position: relative; z-index: 2;
+    background:
+      radial-gradient(circle at 12% 30%, rgba(255,255,255,.12) 0 3px, transparent 4px),
+      radial-gradient(circle at 82% 60%, rgba(255,255,255,.1) 0 3px, transparent 4px),
+      var(--leaf);
+    background-size: 46px 38px, 58px 44px, auto;
+    margin-top: -1px;
+    padding: 4px 20px max(18px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .cta-wrap { width: 100%; max-width: 380px; animation: ctaBreathe 2.6s ease-in-out infinite; }
+  @keyframes ctaBreathe { 0%,100% { scale: 1; } 50% { scale: 1.035; } }
+  #btn-play { width: 100%; }
+  #btn-play .fa-solid { font-size: .95em; }
+  .home-row { display: flex; gap: 12px; align-items: center; justify-content: center; width: 100%; max-width: 380px; }
+  .home-row .btn-sec { flex: 1; }
+  #btn-chars-home .fa-gift { color: var(--brand-red) !important; }
+  .home-stats { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; min-height: 34px; }
+  .stat {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(31,58,104,.62); color: #fff;
+    padding: 4px 13px; border-radius: 999px;
+    font-family: var(--px); font-weight: 800; font-size: 16px; line-height: 1.6;
+  }
+  .stat .gem-icon { color: var(--gem); }
+
+  .skip-intro {
+    position: absolute; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 6;
+    min-height: 44px; min-width: 44px; padding: 0 16px; border: 0; border-radius: 999px;
+    background: rgba(31,58,104,.75); color: #fff; cursor: pointer;
+    font-family: var(--px); font-weight: 800; font-size: 15px;
+    display: inline-flex; align-items: center; gap: 8px;
+    animation: fadeIn .3s ease .3s both;
+  }
+  .skip-intro:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  #home:not(.intro) .skip-intro { display: none; }
+
+  /* --- Secuencia del intro (solo con #home.intro; se ejecuta una vez por carga) --- */
+  #home.intro .lyr-far   { animation: layerUp .8s var(--out) 0s both; }
+  #home.intro .lyr-mid   { animation: layerUp .8s var(--out) .1s both; }
+  #home.intro .lyr-front,
+  #home.intro .road-wrap { animation: layerUp .8s var(--out) .2s both; }
+  @keyframes layerUp { from { transform: translateY(90px); } to { transform: none; } }
+  #home.intro .tree { animation: treePop .5s var(--pop) calc(.5s + var(--i) * .08s) both; }
+  @keyframes treePop { from { transform: scale(0); } to { transform: none; } }
+  #home.intro .rider-in { animation: rideIn 1.1s var(--out) .5s both; }
+  @keyframes rideIn { from { transform: translateX(-330px); } to { transform: none; } }
+  #home.intro .speed { animation: speedLines 1.2s ease-out .5s both; }
+  @keyframes speedLines { 0% { opacity: 0; } 15%, 70% { opacity: 1; } 100% { opacity: 0; } }
+  #home.intro .logo .l { animation: letterDrop .55s var(--pop) calc(1.05s + var(--i) * .06s) both; }
+  #home.intro .logo .o { animation: wheelIn .7s var(--out) calc(1.0s + var(--i) * .06s) both; }
+  @keyframes letterDrop {
+    from { opacity: 0; transform: translateY(-70px) scale(.5) rotate(-14deg); }
+    60% { opacity: 1; }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes wheelIn {
+    from { opacity: 0; transform: translateX(-90px) rotate(-560deg) scale(.4); }
+    to { opacity: 1; transform: none; }
+  }
+  #home.intro .tagline { animation: popIn .45s var(--pop) 1.65s both; }
+  @keyframes popIn { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+  #home.intro .spark { animation: sparkle .9s ease-out calc(1.5s + var(--i) * .09s) both; }
+  @keyframes sparkle {
+    0% { opacity: 0; transform: scale(0) rotate(0); }
+    40% { opacity: 1; transform: scale(1.2) rotate(60deg); }
+    100% { opacity: 0; transform: scale(0) rotate(140deg); }
+  }
+  #home.intro .home-panel > * { animation: riseIn .5s var(--pop) calc(1.85s + var(--d, 0s)) both; }
+  #home.intro .home-panel > .home-row { --d: .1s; }
+  #home.intro .home-panel > .home-stats { --d: .18s; }
+  @keyframes riseIn { from { opacity: 0; visibility: hidden; transform: translateY(28px) scale(.9); } to { opacity: 1; visibility: visible; transform: none; } }
+
+  /* ---------- barra superior ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex: 0 0 auto;
+    background: rgba(255,255,255,.38); border: 2px solid rgba(255,255,255,.6);
+    padding: 7px; border-radius: 22px;
+  }
+  .pill {
+    background: var(--ink); color: #fff; border-radius: 999px; padding: 6px 14px; min-height: 40px;
+    font-weight: 800; font-size: 19px; display: flex; align-items: center; gap: 8px;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.15), 0 3px 0 rgba(0,0,0,.18);
+    font-family: var(--px);
+  }
+  .pill .gem-icon { color: var(--gem); filter: drop-shadow(0 0 3px rgba(0,255,255,.6)); }
+  .text-gem { color: var(--gem); }
+
+  .icon-btn {
+    width: 50px; height: 50px; flex: 0 0 auto;
+    background: linear-gradient(180deg, #FFE36E, var(--sun) 55%, #F2B200);
+    color: var(--ink); text-shadow: none; font-size: 21px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 16px;
+  }
+  #btn-chars { background: linear-gradient(180deg, #FF7E92, var(--brand-red)); }
+  #btn-repeat { color: #fff; }
+  .snd-toggle { background: linear-gradient(180deg, #B6A2FF, #7C5CE8); color: #fff; }
+  .snd-toggle.off { background: linear-gradient(180deg, #C9CFDB, #8E97AA); }
+  .spacer { flex: 1; }
+
+  .title {
+    align-self: center; position: relative;
+    font-family: var(--px); font-weight: 800; font-size: clamp(20px, 6vw, 25px); line-height: 1.15;
+    color: var(--ink); background: var(--sun);
+    padding: 6px 22px 5px; margin: 2px auto 18px; border-radius: 14px;
+    text-align: center; text-transform: uppercase; letter-spacing: .5px;
+    box-shadow: inset 0 -4px 0 rgba(180,120,0,.3), 0 5px 0 var(--ink), 0 9px 14px rgba(0,0,0,.14);
+  }
+  .title::before, .title::after {
+    content: ''; position: absolute; top: 9px; width: 18px; height: 100%; z-index: -1;
+    background: var(--sun-deep); border-radius: 4px;
+  }
+  .title::before { left: -10px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 40% 50%); }
+  .title::after  { right: -10px; clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%); }
+  .screen-sub { text-align: center; color: var(--ink); font-weight: 800; font-size: 15px; line-height: 1.4; margin: -6px 0 16px; }
+  .count-chip { display: inline-block; margin-top: 6px; padding: 2px 12px; border-radius: 999px; background: var(--ink); color: #fff; font-family: var(--px); }
+  .count-chip b { color: var(--sun); }
+
+  /* ---------- MAPA ---------- */
+  .biomes { display: flex; flex-direction: column; gap: 20px; padding: 6px 2px 28px; position: relative; }
+  .biomes::before {
+    content: ''; position: absolute; left: 47px; top: 30px; bottom: 60px; width: 10px; margin-left: -5px;
+    background: repeating-linear-gradient(180deg, #fff 0 12px, transparent 12px 22px);
+    border-radius: 5px; opacity: .9;
+  }
+  .biome {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    padding: 12px 12px 12px 12px; text-align: left;
+    position: relative; overflow: visible;
+    border-radius: 24px;
+    background: var(--cream); color: var(--ink); text-shadow: none;
+    border: 3px solid var(--c, #fff);
+    box-shadow: inset 0 -5px 0 var(--cream-2), 0 6px 0 rgba(31,58,104,.28), 0 10px 18px rgba(0,0,0,.1);
+  }
+  .biome::before { display: none; }
+  .biome .face {
+    width: 66px; height: 66px; flex: 0 0 auto; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; border-radius: 20px;
+    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.45), transparent 55%), var(--c, var(--sky-deep));
+    box-shadow: inset 0 -5px 0 rgba(0,0,0,.18), 0 3px 0 rgba(31,58,104,.25);
+  }
+  .biome .num {
+    position: absolute; top: -9px; left: -9px; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--ink); color: #fff; font-family: var(--px); font-weight: 800; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
+  }
+  .biome .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .biome .nm { font-size: 19px; font-weight: 800; line-height: 1.15; font-family: var(--px); }
+  .biome .sub { font-size: 14px; color: var(--ink-soft); font-weight: 800; font-family: var(--body); margin-top: 2px; }
+  .stars { font-size: 18px; letter-spacing: 2px; margin-top: 4px; }
+  .st { display: inline-block; }
+  .st.off { opacity: .28; filter: grayscale(1); }
+  .biome .go {
+    width: 46px; height: 46px; flex: 0 0 auto; border-radius: 50%;
+    background: var(--ink); color: var(--sun); font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 0 rgba(0,0,0,.2);
+  }
+  .biome .go .fa-play { margin-left: 3px; }
+  .biome.next { border-color: var(--ink); }
+  .biome.next .go { animation: goPulse 1.4s ease-in-out infinite; }
+  @keyframes goPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 3px 0 rgba(0,0,0,.2), 0 0 0 0 rgba(31,58,104,.45); }
+    50% { transform: scale(1.1); box-shadow: 0 3px 0 rgba(0,0,0,.2), 0 0 0 9px rgba(31,58,104,0); }
+  }
+  .biome .tag {
+    position: absolute; top: -13px; right: 18px; z-index: 2;
+    background: var(--brand-red); color: #fff; font-family: var(--px); font-weight: 800; font-size: 14px;
+    padding: 1px 12px 2px; border-radius: 999px; box-shadow: 0 3px 0 rgba(31,58,104,.3);
+    text-shadow: 0 1px 0 rgba(0,0,0,.2);
+  }
+  .biome.locked {
+    background: #E4F1FA; border-color: rgba(255,255,255,.9); cursor: not-allowed;
+    box-shadow: 0 4px 0 rgba(31,58,104,.15);
+  }
+  .biome.locked .face { filter: grayscale(.9); opacity: .7; }
+  .biome.locked .nm, .biome.locked .sub { opacity: .65; }
+  .biome.locked .go { background: rgba(31,58,104,.35); color: #fff; }
+  .biome.locked:active { transform: none; }
+  .biome.locked .face::after { content: '🔒'; position: absolute; font-size: 28px; }
+  .biome.locked .face span { opacity: 0.2; }
+  .biome.nope { animation: shake .4s cubic-bezier(.36,.07,.19,.97) both; }
+
+  /* ---------- JUGAR ---------- */
+  #play { padding: 14px 14px max(14px, env(safe-area-inset-bottom)); }
+  .progress-wrap { position: relative; flex: 0 0 auto; margin: 0 0 10px; padding: 20px 36px 0 6px; }
+  .progress {
+    display: flex; gap: 4px; margin: 0; padding: 6px;
+    background: #5C6684; border-radius: 999px;
+    box-shadow: inset 0 3px 0 rgba(0,0,0,.22), 0 3px 0 rgba(255,255,255,.5);
+  }
+  .pblock {
+    flex: 1; height: 10px; background: rgba(255,255,255,.22); border-radius: 999px;
+    transition: background-color .3s ease, box-shadow .3s ease;
+  }
+  .pblock.done { background: var(--sun); box-shadow: 0 0 8px rgba(255,210,63,.85); }
+  .pbike {
+    position: absolute; top: -4px; width: 40px; height: 34px; display: block;
+    left: calc(6px + (100% - 42px) * var(--p, 0));
+    transform: translateX(-50%);
+    transition: left .6s var(--pop);
+    filter: drop-shadow(0 2px 0 rgba(31,58,104,.25));
+  }
+  .pflag { position: absolute; right: 0; top: 8px; font-size: 26px; line-height: 1; }
+
+  .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; min-height: 0; position: relative; }
+
+  .oreblock {
+    width: min(58vw, 236px); height: min(58vw, 236px);
+    background: var(--stone);
+    border-radius: 34px; border: 6px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: min(27vw, 112px); line-height: 1.1;
+    position: relative;
+    box-shadow:
+      inset 0 -10px 0 rgba(0,0,0,.14),
+      inset 0 10px 0 rgba(255,255,255,.22),
+      0 8px 0 rgba(31,58,104,.3),
+      0 18px 28px rgba(0,0,0,.16);
+    z-index: 10;
+    animation: oreIn .45s var(--pop) both;
+  }
+  .oreblock::before {
+    content: ''; position: absolute; inset: 9px; border-radius: 24px;
+    border: 3px dashed rgba(255,255,255,.5); pointer-events: none;
+  }
+  @keyframes oreIn { from { opacity: 0; transform: scale(.6) rotate(-6deg); } to { opacity: 1; transform: none; } }
+  .oreblock .word {
+    font-family: var(--px); font-weight: 800; font-size: clamp(30px, 10vw, 50px); color: #fff;
+    text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 0 5px 0 var(--ink);
+    text-align: center; padding: 0 14px; line-height: 1.2; word-break: break-word;
+  }
+  .oreblock.wide { font-size: min(17vw, 76px); white-space: nowrap; }
+  .oreblock.shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0); } 40%, 60% { transform: translate3d(8px, 0, 0); } }
+  .oreblock.pop { animation: pop .4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+  @keyframes pop { 50% { transform: scale(1.2); } 100% { transform: scale(0); opacity: 0; } }
+
+  .speaker {
+    background: linear-gradient(180deg, #FFE36E, var(--sun) 55%, #F2B200);
+    width: 104px; height: 104px; font-size: 46px;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto;
+    border-radius: 50%;
+  }
+  .speaker i { text-shadow: 0 3px 0 var(--ink); }
+  .hint {
+    font-size: 17px; font-weight: 900; color: var(--ink);
+    display: flex; gap: 10px; align-items: center;
+    background: rgba(255,255,255,.92); padding: 7px 18px; border-radius: 999px;
+    box-shadow: 0 4px 0 rgba(31,58,104,.2);
+    animation: floatHint 2s ease-in-out infinite;
+  }
+  @keyframes floatHint { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+  .options {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;
+    flex: 0 0 auto; padding: 6px 0 10px;
+  }
+  .opt {
+    background: var(--cream); color: var(--ink); text-shadow: none;
+    padding: 14px 10px; font-size: clamp(21px, 5.8vw, 25px); min-height: 78px;
+    display: flex; align-items: center; justify-content: center; word-break: break-word;
+    border-radius: 22px; line-height: 1.15; text-align: center;
+    box-shadow: inset 0 -5px 0 var(--cream-2), 0 6px 0 rgba(31,58,104,.3), 0 10px 14px rgba(0,0,0,.1);
+  }
+  .opt.emoji { font-size: 48px; }
+  .opt.ok {
+    background: var(--ok); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.2);
+    box-shadow: inset 0 -5px 0 var(--ok-deep), 0 6px 0 rgba(31,58,104,.3), 0 0 0 4px #fff;
+    animation: pulseOk 0.5s;
+  }
+  .opt.ok::after, .opt.bad::after {
+    position: absolute; top: 6px; right: 8px; width: 26px; height: 26px; border-radius: 50%;
+    font: 900 16px/26px var(--body); text-align: center; color: #fff; text-shadow: none;
+  }
+  .opt.ok::after { content: '✓'; background: var(--ok-deep); }
+  .opt.bad::after { content: '✗'; background: #C9374B; }
+  @keyframes pulseOk { 50% { transform: scale(1.06); } }
+  .opt.bad { background: var(--danger); color: #fff; opacity: 0.85; box-shadow: inset 0 -5px 0 #C9374B, 0 6px 0 rgba(31,58,104,.3); }
+  .opt[disabled] { cursor: default; }
+
+  /* frases */
+  .slots { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 64px; align-items: center; width: 100%; }
+  .slot {
+    min-width: 70px; height: 56px; padding: 0 12px; border-radius: 14px;
+    background: rgba(255,255,255,.35); border: 3px dashed rgba(255,255,255,.95);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 21px; font-family: var(--px); color: var(--ink);
+    transition: background-color .2s ease;
+  }
+  .slot.filled {
+    background: var(--ok); color: #fff; border: 3px solid #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,.2);
+    box-shadow: inset 0 -4px 0 var(--ok-deep), 0 4px 0 rgba(31,58,104,.25);
+  }
+  .tiles { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; }
+  .tile {
+    background: linear-gradient(180deg, #7BD3FA, #2FA3DE); padding: 12px 20px; min-height: 54px; min-width: 54px;
+    font-size: 22px; border-radius: 16px;
+  }
+  .tile.bad { background: var(--danger); animation: shake .4s cubic-bezier(.36,.07,.19,.97) both; }
+  .tile.used { visibility: hidden; }
+
+  /* ---------- FEEDBACK Y PARTÍCULAS ---------- */
+  #fx { position: absolute; inset: 0; pointer-events: none; z-index: 35; overflow: hidden; }
+  .particle {
+    position: absolute; width: 16px; height: 16px;
+    background-size: contain; background-repeat: no-repeat;
+    animation: fly 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .p-star { background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="%23FFD700" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>'); }
+  .p-circle { border-radius: 50%; }
+  @keyframes fly {
+    0% { transform: translate(0,0) scale(0.5) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--dx),var(--dy)) scale(1.5) rotate(var(--rot)); opacity: 0; }
+  }
+
+  .floater {
+    position: absolute; font-family: var(--px); font-size: 24px; font-weight: 800;
+    color: var(--sun);
+    text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 0 4px 0 var(--ink);
+    animation: rise 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; white-space: nowrap; z-index: 16;
+  }
+  @keyframes rise {
+    0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; }
+    20% { transform: translate(-50%, -20px) scale(1.2); opacity: 1; }
+    80% { transform: translate(-50%, -80px) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -100px) scale(0.8); opacity: 0; }
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal {
+    position: absolute; inset: 0; z-index: 30;
+    background: rgba(16, 24, 52, 0.74); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal.active { display: flex; animation: fadeInModal 0.2s ease-out; }
+  @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+
+  .card {
+    background: linear-gradient(180deg, #2E5596 0%, var(--ink) 100%);
+    border-radius: 30px; padding: 30px 22px 26px; width: 100%; max-width: 400px;
+    max-height: 100%; overflow-y: auto;
+    text-align: center;
+    border: 4px solid var(--sun);
+    box-shadow: inset 0 3px 0 rgba(255,255,255,.18), 0 8px 0 rgba(0,0,0,.25), 0 20px 40px rgba(0,0,0,.45);
+    animation: drop 0.5s var(--pop);
+    position: relative;
+    isolation: isolate;
+  }
+  .card::before {
+    content: ''; position: absolute; left: 50%; top: 110px; width: 640px; height: 640px; margin: -320px 0 0 -320px;
+    background: repeating-conic-gradient(rgba(255,255,255,.07) 0 12deg, transparent 12deg 24deg);
+    border-radius: 50%; z-index: -1; pointer-events: none;
+    animation: spin 36s linear infinite;
+  }
+  @keyframes drop { from { transform: translateY(-80px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+  .card h2 {
+    font-family: var(--px); font-weight: 800; font-size: 25px; margin: 0 0 12px; color: var(--sun); line-height: 1.15;
+    text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 0 5px 0 rgba(0,0,0,.35);
+    letter-spacing: .5px;
+  }
+  .big-stars { font-size: 50px; letter-spacing: 6px; margin: 10px 0 18px; }
+  .big-stars .st { animation: starPop .55s var(--pop) calc(.3s + var(--i) * .2s) both; }
+  .big-stars .st.off { animation: none; }
+  @keyframes starPop { from { opacity: 0; transform: scale(0) rotate(-90deg); } to { opacity: 1; transform: none; } }
+  .card .row { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+  .card .btn-big { font-size: 21px; padding: 14px 22px; }
+  .card a.btn-big { text-transform: none; font-size: 19px; }
+
+  /* ---------- COLECCIÓN ---------- */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 24px; }
+  .char {
+    background: var(--cream); color: var(--ink); border: 0; border-radius: 22px;
+    padding: 14px 6px 12px; text-align: center; min-height: 138px;
+    display: flex; flex-direction: column; align-items: center;
+    font-family: var(--px); cursor: pointer;
+    box-shadow: inset 0 -5px 0 var(--cream-2), 0 6px 0 rgba(31,58,104,.25), 0 10px 14px rgba(0,0,0,.08);
+    transition: transform 0.2s var(--pop);
+  }
+  .char:focus-visible { outline: 4px solid var(--ink); outline-offset: 3px; }
+  .char:not(.lock):active { transform: scale(0.94); }
+  .char .em {
+    width: 66px; height: 66px; border-radius: 50%; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center; font-size: 40px;
+    background: radial-gradient(circle at 35% 30%, #fff 0%, #FFE9A3 70%);
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,.07);
+  }
+  .char .cn { font-size: 14px; font-weight: 800; margin-top: 8px; line-height: 1.15; }
+  .char.lock { background: #E4F1FA; box-shadow: inset 0 0 0 3px rgba(255,255,255,.7); cursor: default; }
+  .char.lock .em { background: rgba(31,58,104,.16); filter: grayscale(1); opacity: .75; }
+  .char.lock .cn { opacity: .6; }
+  .char .need {
+    font-size: 13px; font-weight: 800; color: var(--ink); margin-top: 6px;
+    background: var(--sun); border-radius: 999px; padding: 1px 9px;
+  }
+  .char .need .fa-gem { color: #1694B8; }
+  .need-bar { display: block; width: 78%; height: 7px; margin-top: 7px; border-radius: 999px; background: rgba(31,58,104,.18); overflow: hidden; }
+  .need-bar i { display: block; height: 100%; background: var(--leaf); border-radius: inherit; }
+  .char.wiggle .em { animation: wiggle .6s var(--pop); }
+  @keyframes wiggle { 0% { transform: scale(1); } 30% { transform: scale(1.2) rotate(-12deg); } 60% { transform: scale(1.1) rotate(10deg); } 100% { transform: none; } }
+
+  /* hero de los modales */
+  .hero-guy {
+    font-size: 90px;
+    filter: drop-shadow(0 10px 5px rgba(0,0,0,.3));
+    animation: bob 1.4s ease-in-out infinite;
+    position: relative;
+    z-index: 10;
+  }
+  @keyframes bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-15px) rotate(3deg); } }
+
+  /* ---------- CONFETI DE PANTALLA COMPLETA (fin del juego) ---------- */
+  .confetti-layer {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none; overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute; top: -20px; opacity: 0.95; border-radius: 2px;
+    animation-name: confettiFall; animation-timing-function: cubic-bezier(.4,0,.6,1); animation-fill-mode: forwards;
+  }
+  .confetti-piece.round { border-radius: 50%; }
+  @keyframes confettiFall {
+    0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--drift), 115vh) rotate(var(--rot)); opacity: 0.85; }
+  }
+
+  /* ---------- CÓDIGO DE DESCUENTO ---------- */
+  .reward-code {
+    font-family: var(--pixel); font-weight: 800; font-size: clamp(20px, 6vw, 28px);
+    letter-spacing: 2px; color: var(--ink); text-align: center;
+    background: repeating-linear-gradient(135deg, var(--gold) 0 18px, #FFE27A 18px 36px);
+    border: 4px dashed var(--ink);
+    border-radius: 16px; padding: 16px 10px;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,.5), 0 6px 0 rgba(0,0,0,.2);
+    word-break: break-word;
+  }
+
+  /* Tutorial Overlay */
+  #tutorial-hand {
+    position: absolute; font-size: 42px; z-index: 100; pointer-events: none;
+    animation: pointAndClick 1.4s ease-in-out infinite; display: none; filter: drop-shadow(0 3px 0 rgba(31,58,104,.45));
+  }
+  @keyframes pointAndClick { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-10px,-10px) scale(0.9);} }
+
+  .text-brand-yellow { color: var(--brand-yellow) !important; }
+  .hover\:text-brand-yellow:hover { color: var(--brand-yellow) !important; }
+
+  /* ---------- FOOTER (integrado al universo del juego) ---------- */
+  .footer-bogo {
+    background: linear-gradient(180deg, var(--leaf) 0%, var(--night-2) 55%, var(--night) 100%);
+    margin-top: -1px;
+  }
+  .footer-bogo p, .footer-bogo a { font-family: var(--body); }
+  @media (min-width: 640px) {
+    .footer-bogo {
+      border-radius: 0 0 28px 28px;
+      max-width: 520px; margin: -1px auto 0;
+      border-left: 8px solid var(--night-2);
+      border-right: 8px solid var(--night-2);
+      border-bottom: 8px solid var(--night-2);
+    }
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 359px) {
+    .icon-btn { width: 46px; height: 46px; font-size: 19px; }
+    .pill { padding: 5px 11px; font-size: 17px; }
+    .biome .nm { font-size: 17px; }
+    .biome .face { width: 58px; height: 58px; font-size: 32px; }
+    .biomes::before { left: 43px; }
+    .grid { gap: 9px; }
+  }
+  @media (max-height: 700px) {
+    .oreblock { width: 168px; height: 168px; font-size: 76px; }
+    .btn-big { padding: 14px 24px; }
+    .logo { font-size: clamp(44px, 13vw, 64px); }
+    .tagline { margin-top: 10px; }
+    .home-panel { gap: 11px; }
+    .stage { gap: 14px; }
+  }
+  @media (max-height: 560px) {
+    .home-head { padding-top: 12px; }
+    .logo { font-size: clamp(38px, 11vw, 54px); }
+    .oreblock { width: 132px; height: 132px; font-size: 60px; }
+    .opt { min-height: 62px; padding: 10px 8px; }
+    .opt.emoji { font-size: 38px; }
+    .speaker { width: 80px; height: 80px; font-size: 36px; }
+  }
+  /* Móvil horizontal: la escena a la izquierda y los botones a la derecha */
+  @media (orientation: landscape) and (max-height: 500px) {
+    #home.active { display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: auto 1fr; }
+    .home-head { grid-column: 1; grid-row: 1; padding-top: 10px; }
+    .home-stage {
+      grid-column: 1; grid-row: 2; min-height: 0; margin-top: 0;
+      -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent);
+    }
+    .home-panel { grid-column: 2; grid-row: 1 / 3; justify-content: center; background: transparent; padding: 12px 14px; gap: 10px; }
+    .logo { font-size: clamp(34px, 10vh, 50px); }
+    .tagline { font-size: 14px; margin-top: 8px; }
+    .btn-big { font-size: 19px; padding: 12px 16px; }
+    #game[data-screen="home"] .world-hills { opacity: 1; transform: none; }
+    .options { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .topbar { margin-bottom: 8px; padding: 5px; }
+    .progress-wrap { margin-bottom: 4px; }
+    .oreblock { width: 112px; height: 112px; font-size: 52px; border-width: 4px; border-radius: 24px; }
+    .stage { gap: 8px; }
+    .hint { font-size: 14px; padding: 4px 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sprites SVG reutilizables (ilustraciones propias de BogoKids) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="wheel-o" viewBox="-50 -50 100 100">
+      <circle r="48" fill="#1F3A68"/>
+      <circle r="37" fill="#FFFFFF"/>
+      <g stroke="#1F3A68" stroke-width="5" stroke-linecap="round">
+        <line x1="0" y1="-31" x2="0" y2="31"/>
+        <line x1="-27" y1="-15.5" x2="27" y2="15.5"/>
+        <line x1="-27" y1="15.5" x2="27" y2="-15.5"/>
+      </g>
+      <circle r="10" fill="#FF7A2F" stroke="#1F3A68" stroke-width="4"/>
+    </symbol>
+    <symbol id="mini-bike" viewBox="0 -16 48 50">
+      <g fill="#fff" stroke="#1F3A68" stroke-width="2.6">
+        <circle cx="10" cy="24" r="7.5"/><circle cx="38" cy="24" r="7.5"/>
+      </g>
+      <g fill="none" stroke="#FF7A2F" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 24 L21 24 L33 13 L17 13 Z M33 13 L38 24"/>
+      </g>
+      <path d="M31 13 L30 7 L35 7" fill="none" stroke="#1F3A68" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="22" cy="7" rx="6.5" ry="5.5" fill="#FF7A2F" stroke="#1F3A68" stroke-width="1.6"/>
+      <circle cx="23" cy="-4" r="8.5" fill="#F8DDB6" stroke="#1F3A68" stroke-width="1.6"/>
+      <path d="M14.2 -5 A9 9 0 0 1 31.8 -5 Q23 -2 14.2 -5Z" fill="#E8334A" stroke="#1F3A68" stroke-width="1.6"/>
+      <circle cx="20.5" cy="-2.5" r="1.3" fill="#1F3A68"/><circle cx="25.5" cy="-2.5" r="1.3" fill="#1F3A68"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="game-container">
+<div id="game" data-screen="home">
+
+  <!-- Mundo de fondo (cielo, sol, nubes y colinas) -->
+  <div id="world" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+    <svg class="world-hills" viewBox="0 0 400 100" preserveAspectRatio="none">
+      <path fill="#9BDB7A" d="M0 40 Q60 8 130 30 T270 26 T400 30 V100 H0Z"/>
+      <path fill="#5DBB46" d="M0 62 Q90 38 200 56 T400 50 V100 H0Z"/>
+    </svg>
+  </div>
+
+  <!-- Tutorial Hand -->
+  <div id="tutorial-hand" aria-hidden="true">👆🏽</div>
+
+  <!-- ===== HOME (con intro cinematográfico) ===== -->
+  <section id="home" class="screen active intro">
+    <header class="home-head">
+      <span class="spark s1" style="--i:0" aria-hidden="true"></span>
+      <span class="spark s2" style="--i:1" aria-hidden="true"></span>
+      <span class="spark s3" style="--i:2" aria-hidden="true"></span>
+      <span class="spark s4" style="--i:3" aria-hidden="true"></span>
+      <span class="spark s5" style="--i:4" aria-hidden="true"></span>
+      <h1 class="logo" aria-label="BogoKids">
+        <span class="w" aria-hidden="true">
+          <span class="l" style="--i:0">B</span><svg class="o" style="--i:1"><use href="#wheel-o"/></svg><span class="l" style="--i:2">G</span><svg class="o" style="--i:3"><use href="#wheel-o"/></svg>
+        </span>
+        <span class="w" aria-hidden="true">
+          <span class="l k1" style="--i:4">K</span><span class="l k2" style="--i:5">I</span><span class="l k3" style="--i:6">D</span><span class="l k4" style="--i:7">S</span>
+        </span>
+      </h1>
+      <p class="tagline">¡Aprende <b>inglés</b> en bici!</p>
+    </header>
+
+    <div class="home-stage" aria-hidden="true">
+      <!-- Escenario: cerros, colinas y ciclovía -->
+      <svg class="scene-bg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice">
+        <g class="lyr lyr-far">
+          <path fill="#CFE0F8" d="M-60 196 Q0 150 60 160 Q110 118 160 138 Q220 92 272 132 Q320 108 362 134 Q410 118 460 146 V300 H-60Z"/>
+          <path fill="#A4BDEB" d="M-60 210 Q20 172 76 184 L128 132 Q149 112 170 130 L214 172 Q258 142 300 162 Q352 132 460 176 V300 H-60Z"/>
+          <!-- capilla en el cerro: guiño a los cerros orientales de Bogotá -->
+          <g transform="translate(149 121)">
+            <rect x="-6" y="-10" width="12" height="10" rx="1" fill="#fff"/>
+            <path d="M-8 -10 L0 -17 L8 -10Z" fill="#E8334A"/>
+            <rect x="-1.6" y="-24" width="3.2" height="8" fill="#fff"/>
+            <rect x="-2" y="-6" width="4" height="6" fill="#A4BDEB"/>
+          </g>
+        </g>
+        <g class="lyr lyr-mid">
+          <path fill="#8BD46A" d="M-60 226 Q30 186 110 204 Q180 220 250 198 Q330 176 460 206 V300 H-60Z"/>
+          <g transform="translate(46 206)"><g class="tree" style="--i:0">
+            <rect x="-3" y="-16" width="6" height="16" rx="2" fill="#8B5A2B"/>
+            <circle cx="0" cy="-27" r="14" fill="#3FA34D"/><circle cx="-8" cy="-20" r="9" fill="#4DB35A"/><circle cx="9" cy="-21" r="10" fill="#57B85A"/>
+            <circle cx="-4" cy="-32" r="4" fill="#7ED36F"/>
+          </g></g>
+          <g transform="translate(84 202)"><g class="tree" style="--i:1">
+            <rect x="-2" y="-10" width="4" height="10" fill="#8B5A2B"/>
+            <path d="M0 -40 L12 -10 H-12Z" fill="#2E8F45"/><path d="M0 -48 L9 -26 H-9Z" fill="#3FA34D"/>
+          </g></g>
+          <g transform="translate(270 198)"><g class="tree" style="--i:2">
+            <rect x="-3" y="-15" width="6" height="15" rx="2" fill="#8B5A2B"/>
+            <circle cx="0" cy="-26" r="13" fill="#3FA34D"/><circle cx="9" cy="-20" r="9" fill="#57B85A"/>
+            <circle cx="-5" cy="-31" r="3.5" fill="#7ED36F"/>
+          </g></g>
+          <g transform="translate(336 196)"><g class="tree" style="--i:3">
+            <rect x="-2" y="-10" width="4" height="10" fill="#8B5A2B"/>
+            <path d="M0 -44 L13 -10 H-13Z" fill="#2E8F45"/><path d="M0 -52 L10 -28 H-10Z" fill="#3FA34D"/>
+          </g></g>
+          <g transform="translate(366 204)"><g class="tree" style="--i:4">
+            <rect x="-2" y="-9" width="4" height="9" fill="#8B5A2B"/>
+            <circle cx="0" cy="-17" r="9" fill="#4DB35A"/>
+          </g></g>
+        </g>
+        <g class="lyr lyr-front">
+          <path fill="#5DBB46" d="M-60 242 Q60 222 200 236 Q320 248 460 230 V300 H-60Z"/>
+          <path fill="#F5DCA8" d="M-60 264 Q200 244 460 264 V294 Q200 280 -60 294Z"/>
+          <path fill="none" stroke="#DDB676" stroke-width="2.5" d="M-60 264 Q200 244 460 264"/>
+          <g>
+            <circle cx="20" cy="250" r="3" fill="#FF8FB1"/><circle cx="26" cy="246" r="2.5" fill="#FFD23F"/>
+            <circle cx="96" cy="244" r="3" fill="#fff"/><circle cx="318" cy="248" r="3" fill="#FF8FB1"/>
+            <circle cx="372" cy="245" r="2.5" fill="#FFD23F"/><circle cx="380" cy="250" r="3" fill="#fff"/>
+          </g>
+          <g>
+            <circle cx="40" cy="296" r="3.5" fill="#FFD23F"/><circle cx="48" cy="292" r="3" fill="#FF8FB1"/>
+            <circle cx="130" cy="297" r="3" fill="#fff"/><circle cx="250" cy="296" r="3.5" fill="#FF8FB1"/>
+            <circle cx="300" cy="297" r="3" fill="#FFD23F"/><circle cx="360" cy="294" r="3.5" fill="#fff"/>
+          </g>
+        </g>
+      </svg>
+      <!-- Capa animada: línea de la ciclovía y la mascota en su bici -->
+      <svg class="scene-fg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice">
+        <g class="road-wrap">
+          <path class="road-line" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 16" d="M-60 279 Q200 262 460 279"/>
+        </g>
+        <g class="rider-in">
+          <g transform="translate(152 248) scale(1.3)">
+            <g class="rider-bob">
+              <g class="speed" stroke="#fff" stroke-width="3" stroke-linecap="round">
+                <line x1="-46" y1="-46" x2="-22" y2="-46"/>
+                <line x1="-58" y1="-30" x2="-24" y2="-30"/>
+                <line x1="-46" y1="-12" x2="-26" y2="-12"/>
+              </g>
+              <!-- rueda trasera -->
+              <g class="wheel">
+                <circle r="17" fill="#fff" stroke="#1F3A68" stroke-width="4.5"/>
+                <g stroke="#1F3A68" stroke-width="1.4">
+                  <line x1="0" y1="-14" x2="0" y2="14"/><line x1="-12.1" y1="-7" x2="12.1" y2="7"/><line x1="-12.1" y1="7" x2="12.1" y2="-7"/>
+                </g>
+                <circle r="3.4" fill="#FF7A2F" stroke="#1F3A68" stroke-width="1.2"/>
+              </g>
+              <!-- rueda delantera -->
+              <g transform="translate(52 0)"><g class="wheel">
+                <circle r="17" fill="#fff" stroke="#1F3A68" stroke-width="4.5"/>
+                <g stroke="#1F3A68" stroke-width="1.4">
+                  <line x1="0" y1="-14" x2="0" y2="14"/><line x1="-12.1" y1="-7" x2="12.1" y2="7"/><line x1="-12.1" y1="7" x2="12.1" y2="-7"/>
+                </g>
+                <circle r="3.4" fill="#FF7A2F" stroke="#1F3A68" stroke-width="1.2"/>
+              </g></g>
+              <!-- marco -->
+              <g fill="none" stroke="#FF7A2F" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M0 0 L24 0 L45 -19 L18 -17 Z M45 -19 L52 0"/>
+              </g>
+              <path d="M44 -19 L42 -28 L49 -29" fill="none" stroke="#1F3A68" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11 -19 Q17 -22 23 -19" fill="none" stroke="#1F3A68" stroke-width="3.4" stroke-linecap="round"/>
+              <!-- pedal -->
+              <g transform="translate(24 0)"><g class="crank-spin">
+                <circle r="4.6" fill="#FFD23F" stroke="#1F3A68" stroke-width="1.4"/>
+                <line x1="0" y1="-8" x2="0" y2="8" stroke="#1F3A68" stroke-width="2.4" stroke-linecap="round"/>
+              </g></g>
+              <!-- piernita -->
+              <path d="M22 -20 L28 -8" stroke="#1F3A68" stroke-width="4.2" stroke-linecap="round"/>
+              <ellipse cx="29.5" cy="-6.5" rx="4" ry="2.6" fill="#1F3A68"/>
+              <!-- cuerpo -->
+              <ellipse cx="25" cy="-26" rx="11.5" ry="10" fill="#FF7A2F" stroke="#1F3A68" stroke-width="2"/>
+              <!-- brazo -->
+              <path d="M31 -28 Q38 -30 44 -28" fill="none" stroke="#F8DDB6" stroke-width="4.2" stroke-linecap="round"/>
+              <path d="M31 -28 Q38 -30 44 -28" fill="none" stroke="#1F3A68" stroke-width=".8" stroke-linecap="round" opacity=".5"/>
+              <!-- cabeza -->
+              <circle cx="27" cy="-50" r="16" fill="#F8DDB6" stroke="#1F3A68" stroke-width="2"/>
+              <!-- casco rojo -->
+              <path d="M9.5 -52 A17.5 17.5 0 0 1 44.5 -52 Q27 -45 9.5 -52Z" fill="#E8334A" stroke="#1F3A68" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M19 -63 Q27 -66 35 -63" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+              <circle cx="15" cy="-58" r="1.4" fill="#fff"/>
+              <!-- cara -->
+              <circle cx="22" cy="-46" r="2.3" fill="#1F3A68"/><circle cx="32" cy="-46" r="2.3" fill="#1F3A68"/>
+              <circle cx="22.8" cy="-46.8" r=".8" fill="#fff"/><circle cx="32.8" cy="-46.8" r=".8" fill="#fff"/>
+              <circle cx="17.5" cy="-41.5" r="2.6" fill="#FF9AA2" opacity=".8"/><circle cx="36.5" cy="-41.5" r="2.6" fill="#FF9AA2" opacity=".8"/>
+              <path d="M24 -40.5 Q27 -37.5 30 -40.5" fill="none" stroke="#1F3A68" stroke-width="1.6" stroke-linecap="round"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="home-panel">
+      <div class="cta-wrap">
+        <button class="block btn-big" id="btn-play">
+          <i class="fa-solid fa-person-biking" aria-hidden="true"></i> ¡Vamos a pedalear!
+        </button>
+      </div>
+      <div class="home-row">
+        <button class="block btn-sec" id="btn-chars-home">
+          <i class="fa-solid fa-gift text-brand-yellow" aria-hidden="true"></i> Mis compañeros
+        </button>
+        <button class="block icon-btn snd-toggle" aria-label="Efectos de sonido" aria-pressed="true"><i class="fa-solid fa-music" aria-hidden="true"></i></button>
+      </div>
+      <div class="home-stats" id="home-stats"></div>
+    </div>
+
+    <button class="skip-intro" id="skip-intro">Saltar <i class="fa-solid fa-forward" aria-hidden="true"></i></button>
+  </section>
+
+  <!-- ===== MAPA ===== -->
+  <section id="map" class="screen">
+    <div class="topbar">
+      <button class="block icon-btn" id="map-home" aria-label="Inicio"><i class="fa-solid fa-house" aria-hidden="true"></i></button>
+      <div class="spacer"></div>
+      <div class="pill" aria-label="Gemas"><i class="fa-solid fa-gem gem-icon" aria-hidden="true"></i> <span id="gems-map">0</span></div>
+      <button class="block icon-btn snd-toggle" aria-label="Efectos de sonido" aria-pressed="true"><i class="fa-solid fa-music" aria-hidden="true"></i></button>
+      <button class="block icon-btn" id="btn-chars" aria-label="Mis compañeros"><i class="fa-solid fa-gift text-brand-yellow" aria-hidden="true"></i></button>
+    </div>
+    <h2 class="title">¡Elige tu ruta!</h2>
+    <div class="biomes" id="biomes"></div>
+  </section>
+
+  <!-- ===== JUGAR ===== -->
+  <section id="play" class="screen">
+    <div class="topbar">
+      <button class="block icon-btn" id="play-back" aria-label="Volver al mapa"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+      <div class="pill" aria-label="Gemas"><i class="fa-solid fa-gem gem-icon" aria-hidden="true"></i> <span id="gems-play">0</span></div>
+      <div class="pill" id="streak-pill" style="display:none; background: var(--brand-red);" aria-label="Racha">
+        🔥 <span id="streak">0</span>
+      </div>
+      <div class="spacer"></div>
+      <button class="block icon-btn" id="btn-repeat" style="background: linear-gradient(180deg,#7BD3FA,#2FA3DE);" aria-label="Escuchar otra vez"><i class="fa-solid fa-volume-high" aria-hidden="true"></i></button>
+    </div>
+    <div class="progress-wrap" aria-hidden="true">
+      <div class="progress" id="progress"></div>
+      <svg class="pbike" id="pbike"><use href="#mini-bike"/></svg>
+      <span class="pflag">🏁</span>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="options" id="options"></div>
+  </section>
+
+  <!-- ===== COLECCIÓN ===== -->
+  <section id="chars" class="screen">
+    <div class="topbar">
+      <button class="block icon-btn" id="chars-back" aria-label="Volver al mapa"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+      <div class="spacer"></div>
+      <div class="pill" aria-label="Gemas"><i class="fa-solid fa-gem gem-icon" aria-hidden="true"></i> <span id="gems-chars">0</span></div>
+    </div>
+    <h2 class="title">Mis compañeros de ruta</h2>
+    <p class="screen-sub">¡Gana gemas <i class="fa-solid fa-gem" style="color:#1694B8" aria-hidden="true"></i> para conocer nuevos amigos!<br><span class="count-chip">Tienes <b id="chars-count"></b></span></p>
+    <div class="grid" id="chargrid"></div>
+  </section>
+
+  <div id="fx"></div>
+
+  <!-- ===== MODALES ===== -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true">
+    <div class="card" id="modal-card"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* =========================================================
+   CONTENIDO Y CONFIGURACIÓN
+   ========================================================= */
+const LEVELS = [
+  {
+    id:1, name:'Sendero del Bosque', sub:'Mi primera rodada', icon:'🌲', color:'#5EBB4A',
+    modes:['img2word'],
+    words:[
+      {en:'helmet',   em:'⛑️'}, {en:'bicycle', em:'🚲'}, {en:'bell',    em:'🔔'},
+      {en:'water',    em:'💧'}, {en:'medal',   em:'🏅'}, {en:'trophy',  em:'🏆'},
+      {en:'wheel',    em:'🛞'}, {en:'chain',   em:'⛓️'}, {en:'lock',    em:'🔒'},
+      {en:'light',    em:'🔦'}, {en:'backpack',em:'🎒'}, {en:'flag',    em:'🚩'}
+    ]
+  },
+  {
+    id:2, name:'Calles de Bogotá', sub:'La ciudad en bici', icon:'🏙️', color:'#4CB8E8',
+    modes:['audio2img','img2word'],
+    words:[
+      {en:'bike', em:'🚲'}, {en:'car', em:'🚗'}, {en:'bus', em:'🚌'},
+      {en:'street', em:'🛣️'}, {en:'bridge', em:'🌉'}, {en:'sign', em:'🚸'},
+      {en:'light', em:'🚦'}, {en:'tree', em:'🌳'}, {en:'dog', em:'🐶'},
+      {en:'friend', em:'🧑🏽‍🤝‍🧑🏼'}, {en:'park', em:'🏞️'}, {en:'ball', em:'⚽'}
+    ]
+  },
+  {
+    id:3, name:'Montañas de Cundinamarca', sub:'Naturaleza y aventura', icon:'⛰️', color:'#C68642',
+    modes:['word2img','audio2img'],
+    words:[
+      {en:'mountain', em:'⛰️'}, {en:'rock', em:'🪨'}, {en:'forest', em:'🌲'},
+      {en:'sun', em:'☀️'}, {en:'rain', em:'🌧️'}, {en:'flower', em:'🌸'},
+      {en:'butterfly', em:'🦋'}, {en:'bird', em:'🐦'}, {en:'squirrel', em:'🐿️'},
+      {en:'deer', em:'🦌'}, {en:'river', em:'🌊'}, {en:'cloud', em:'☁️'}
+    ]
+  },
+  {
+    id:4, name:'Pista Velódromo 1 de mayo', sub:'Acciones y frases', icon:'🏁', color:'#3E3A8C',
+    modes:['sentence'],
+    words:[],
+    sentences:[
+      {w:['I','ride','my','bike'], em:'🚴🏽‍♂️🚲'},
+      {w:['I','wear','a','helmet'], em:'🚴🏽‍♀️⛑️'},
+      {w:['I','ring','the','bell'], em:'🚴🏽‍♂️🔔'},
+      {w:['I','drink','water'], em:'🚴🏽‍♀️💧'},
+      {w:['The','bird','flies'], em:'🐦'},
+      {w:['I','climb','the','mountain'], em:'🧗🏽‍♀️⛰️'},
+      {w:['I','win','the','race'], em:'🚴🏽‍♂️🏆'},
+      {w:['We','ride','together'], em:'🧑🏽‍🤝‍🧑🏼🚲'},
+      {w:['I','stop','at','the','sign'], em:'🚸🛑'},
+      {w:['The','sun','shines'], em:'☀️'},
+      {w:['I','cross','the','bridge'], em:'🚴🏽‍♂️🌉'},
+      {w:['I','love','my','bicycle'], em:'🚲💛'}
+    ]
+  },
+  {
+    id:5, name:'Gran Copa BogoFija', sub:'¡Repaso de todo!', icon:'🏆', color:'#FFD23F',
+    modes:['img2word','audio2img','word2img'],
+    review:true,
+    words:[
+      {en:'helmet', em:'⛑️'}, {en:'bicycle', em:'🚲'}, {en:'bell', em:'🔔'},
+      {en:'medal', em:'🏅'}, {en:'mountain', em:'⛰️'}, {en:'sun', em:'☀️'},
+      {en:'bird', em:'🐦'}, {en:'tree', em:'🌳'}, {en:'ride', em:'🚴🏽'},
+      {en:'race', em:'🏁'}, {en:'water', em:'💧'}, {en:'trophy', em:'🏆'}
+    ]
+  }
+];
+
+const CHARACTERS = [
+  {em:'🚴🏽', name:'Explorador',      cost:0},
+  {em:'🐇', name:'Conejo Veloz',    cost:15},
+  {em:'🦊', name:'Zorro Ciclista',  cost:30},
+  {em:'🐿️', name:'Ardilla Trail',   cost:45},
+  {em:'🦉', name:'Búho Nocturno',   cost:60},
+  {em:'🦌', name:'Venado Montañés', cost:75},
+  {em:'🐻', name:'Oso Aventurero',  cost:90},
+  {em:'🦅', name:'Águila Campeona', cost:110},
+  {em:'🏆', name:'Campeón BOGO',    cost:140}
+];
+
+/* =========================================================
+   ESTADO + GUARDADO
+   ========================================================= */
+let S = { gems:0, stars:{}, seen:[], firstTime:true };
+
+// window.storage solo existe en algunos entornos; en GitHub Pages se usa localStorage
+// (mismo formato y misma clave) para que el progreso no se pierda al recargar.
+const STORE = (window.storage && typeof window.storage.get === 'function') ? window.storage : {
+  async get(k){ return { value: localStorage.getItem(k) }; },
+  async set(k, v){ localStorage.setItem(k, v); }
+};
+
+async function load(){
+  try{
+    const r = await STORE.get('bwe-save');
+    if(r && r.value) {
+      S = Object.assign(S, JSON.parse(r.value));
+      S.firstTime = false; // Si hay guardado, no es la primera vez
+    }
+  }catch(e){ console.log("Usando estado en memoria"); }
+  render();
+
+  // Mostrar tutorial en el home si es primera vez (se ubica cuando termina el intro)
+  if(S.firstTime) {
+    positionHand();
+    // Ocultar al hacer clic
+    $('#btn-play').addEventListener('click', () => {
+      S.firstTime = false;
+      save();
+      positionHand();
+    }, {once: true});
+  }
+}
+async function save(){
+  try{ await STORE.set('bwe-save', JSON.stringify(S)); }catch(e){}
+}
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+const show = id => {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('#'+id).classList.add('active');
+  $('#game').dataset.screen = id;
+  $('#tutorial-hand').style.display = 'none';
+  if(id === 'home') setTimeout(positionHand, 420); // tras la transición de pantalla
+};
+const starsHTML = n => [0,1,2].map(i => `<span class="st${i<n?'':' off'}" style="--i:${i}">⭐</span>`).join('');
+
+/* ---- mano del tutorial: solo en el inicio, la primera vez ---- */
+function positionHand(){
+  const hand = $('#tutorial-hand');
+  if(!S.firstTime || introOn || !$('#home').classList.contains('active')){ hand.style.display = 'none'; return; }
+  const rect = $('#btn-play').getBoundingClientRect();
+  const gameRect = $('#game').getBoundingClientRect();
+  hand.style.display = 'block';
+  hand.style.top = (rect.top - gameRect.top + rect.height/2) + 'px';
+  hand.style.left = (rect.left - gameRect.left + rect.width/2 + 30) + 'px';
+}
+window.addEventListener('resize', () => positionHand());
+
+/* ---- intro: se reproduce una sola vez por carga de página ---- */
+const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let introOn = $('#home').classList.contains('intro');
+function endIntro(){
+  if(!introOn) return;
+  introOn = false;
+  $('#home').classList.remove('intro');
+  $('#home').removeEventListener('pointerdown', endIntro);
+  document.removeEventListener('keydown', endIntro);
+  positionHand();
+}
+if(introOn){
+  setTimeout(endIntro, reduceMotion ? 0 : 2700);
+  $('#skip-intro').onclick = endIntro;
+  $('#home').addEventListener('pointerdown', endIntro);   // tocar en cualquier lugar lo omite
+  document.addEventListener('keydown', endIntro);          // cualquier tecla también
+}
+
+/* ---- voz ---- */
+let voice = null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v=>/en[-_]US/i.test(v.lang) && /female/i.test(v.name)) ||
+          vs.find(v=>/en[-_]US/i.test(v.lang)) ||
+          vs.find(v=>/^en/i.test(v.lang)) || null;
+}
+if('speechSynthesis' in window){
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function say(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.85; // Un poco más lento para niños
+  u.pitch = 1.1; // Tono ligeramente más agudo/amigable
+  if(voice) u.voice = voice;
+  speechSynthesis.speak(u);
+}
+
+/* ---- sonidos (Sintetizador Básico) ---- */
+// Los efectos se pueden silenciar; la voz en inglés (parte del aprendizaje) sigue activa.
+let muted = false;
+try{ muted = localStorage.getItem('bogokids-muted') === '1'; }catch(e){}
+let ac = null;
+function beep(freqs, dur=0.1, type='square'){
+  if(muted) return;
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    freqs.forEach((f,i)=>{
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.value = 0.08; // Volumen general
+      o.connect(g); g.connect(ac.destination);
+      const t = ac.currentTime + i*dur;
+      o.start(t);
+      g.gain.setValueAtTime(0.08, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.stop(t + dur);
+    });
+  }catch(e){}
+}
+
+// Funciones de sonido semánticas
+const playWinSound = () => beep([523.25, 659.25, 783.99, 1046.50], 0.1, 'sine'); // Arpegio C mayor
+const playWrongSound = () => beep([150, 100], 0.15, 'sawtooth');
+const playClickSound = () => beep([600], 0.05, 'sine');
+const playUnlockSound = () => beep([440, 554, 659, 880], 0.12, 'triangle');
+
+function paintSoundToggles(){
+  document.querySelectorAll('.snd-toggle').forEach(b=>{
+    b.setAttribute('aria-pressed', muted ? 'false' : 'true');
+    b.title = muted ? 'Efectos de sonido apagados' : 'Efectos de sonido encendidos';
+    b.classList.toggle('off', muted);
+    b.innerHTML = muted ? '<i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>' : '<i class="fa-solid fa-music" aria-hidden="true"></i>';
+  });
+}
+document.querySelectorAll('.snd-toggle').forEach(b => b.onclick = () => {
+  muted = !muted;
+  try{ localStorage.setItem('bogokids-muted', muted ? '1' : '0'); }catch(e){}
+  paintSoundToggles();
+  playClickSound();
+});
+paintSoundToggles();
+
+/* ---- efectos visuales ---- */
+function burst(el, baseColor){
+  const fx = $('#fx'), r = el.getBoundingClientRect(), g = $('#game').getBoundingClientRect();
+  const colors = [baseColor, '#FFFFFF', 'var(--gold)'];
+
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className = 'particle ' + (Math.random()>0.5 ? 'p-star' : 'p-circle');
+
+    if(p.classList.contains('p-circle')){
+        p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    p.style.left = (r.left - g.left + r.width/2 - 8) + 'px';
+    p.style.top  = (r.top  - g.top  + r.height/2 - 8) + 'px';
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 50 + Math.random() * 100;
+    p.style.setProperty('--dx', (Math.cos(angle) * distance) + 'px');
+    p.style.setProperty('--dy', (Math.sin(angle) * distance) + 'px');
+    p.style.setProperty('--rot', (Math.random() * 360) + 'deg');
+
+    fx.appendChild(p);
+    setTimeout(()=>p.remove(), 800);
+  }
+}
+
+function floater(text, el){
+  const fx = $('#fx');
+  const d = document.createElement('div');
+  d.className='floater'; d.innerHTML=text;
+
+  if(el){
+    const r = el.getBoundingClientRect(), g = $('#game').getBoundingClientRect();
+    d.style.left = (r.left - g.left + r.width/2) + 'px';
+    d.style.top = (r.top - g.top) + 'px';
+  } else {
+    d.style.left='50%'; d.style.top='40%';
+  }
+
+  fx.appendChild(d);
+  setTimeout(()=>d.remove(), 1200);
+}
+
+/* =========================================================
+   RENDER: mapa + personajes
+   ========================================================= */
+function unlockedCount(){ return CHARACTERS.filter(c=>S.gems>=c.cost).length; }
+
+function render(){
+  ['#gems-map','#gems-play','#gems-chars'].forEach(s=>$(s).textContent = S.gems);
+
+  // estadísticas del inicio (datos reales del progreso)
+  const totalStars = LEVELS.reduce((a,L)=>a + (S.stars[L.id]||0), 0);
+  $('#home-stats').innerHTML = `
+    <span class="stat" aria-label="${S.gems} gemas"><i class="fa-solid fa-gem gem-icon" aria-hidden="true"></i> ${S.gems}</span>
+    <span class="stat" aria-label="${totalStars} de ${LEVELS.length*3} estrellas">⭐ ${totalStars}/${LEVELS.length*3}</span>
+    <span class="stat" aria-label="${unlockedCount()} de ${CHARACTERS.length} compañeros">🦊 ${unlockedCount()}/${CHARACTERS.length}</span>`;
+
+  // mapa
+  const box = $('#biomes'); box.innerHTML='';
+  const nextIdx = LEVELS.findIndex((L,i)=> (i===0 || S.stars[LEVELS[i-1].id] > 0) && !(S.stars[L.id] > 0));
+  LEVELS.forEach((L,i)=>{
+    const prev = i===0 ? true : (S.stars[LEVELS[i-1].id] > 0);
+    const st = S.stars[L.id]||0;
+    const b = document.createElement('button');
+    b.className = 'block biome' + (prev?'':' locked') + (i===nextIdx?' next':'');
+    b.style.setProperty('--c', L.color);
+    b.setAttribute('aria-label', `Ruta ${i+1}: ${L.name}. ` + (prev ? `${st} de 3 estrellas` : 'Bloqueada'));
+    if(!prev) b.setAttribute('aria-disabled', 'true');
+    b.innerHTML = `
+      ${i===nextIdx ? '<span class="tag">¡Te toca!</span>' : ''}
+      <span class="face"><span>${L.icon}</span><b class="num">${i+1}</b></span>
+      <span class="info">
+        <span class="nm">${L.name}</span>
+        <span class="sub">${L.sub}</span>
+        <span class="stars">${starsHTML(st)}</span>
+      </span>
+      <span class="go">${prev ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-lock"></i>'}</span>`;
+    if(prev) b.onclick = ()=>{ playClickSound(); startLevel(L); };
+    else b.onclick = ()=>{
+      playWrongSound();
+      b.classList.remove('nope'); void b.offsetWidth; b.classList.add('nope');
+      floater('🔒 ¡Primero la ruta anterior!', b);
+    };
+    box.appendChild(b);
+  });
+
+  // personajes
+  const g = $('#chargrid'); g.innerHTML='';
+  CHARACTERS.forEach(c=>{
+    const on = S.gems >= c.cost;
+    const d = document.createElement('button');
+    d.className = 'char' + (on?'':' lock');
+    const pct = on ? 100 : Math.min(100, Math.round(S.gems / c.cost * 100));
+    d.setAttribute('aria-label', on ? c.name : `Compañero secreto: se desbloquea con ${c.cost} gemas`);
+    d.innerHTML = `<span class="em">${on?c.em:'❓'}</span>
+      <span class="cn">${on?c.name:'???'}</span>
+      ${on?'':`<span class="need"><i class="fa-solid fa-gem"></i> ${c.cost}</span><span class="need-bar" aria-hidden="true"><i style="width:${pct}%"></i></span>`}`;
+    if(on) d.onclick = ()=>{
+      say(c.name); playClickSound();
+      d.classList.remove('wiggle'); void d.offsetWidth; d.classList.add('wiggle');
+    };
+    else d.setAttribute('aria-disabled', 'true');
+    g.appendChild(d);
+  });
+  $('#chars-count').textContent = `${unlockedCount()} de ${CHARACTERS.length}`;
+}
+
+/* =========================================================
+   MOTOR DE PREGUNTAS
+   ========================================================= */
+let game = null;
+
+function buildQueue(L){
+  const q = [];
+  if(L.modes.includes('sentence')){
+    shuffle(L.sentences).slice(0,10).forEach(s => q.push({type:'sentence', data:s})); // Max 10 por ronda
+    return q;
+  }
+
+  // Tomar hasta 10 palabras aleatorias del nivel
+  const pool = shuffle(L.words).slice(0, 10);
+
+  pool.forEach((w,i)=>{
+    const mode = L.modes[i % L.modes.length];
+    const others = shuffle(L.words.filter(x=>x.en!==w.en)).slice(0,3); // 3 distractores
+    q.push({type:mode, word:w, opts:shuffle([w, ...others])});
+  });
+  return q;
+}
+
+function startLevel(L){
+  game = { L, queue:buildQueue(L), correct:0, errors:0, streak:0, total: 10, current:null };
+  $('#streak-pill').style.display='none';
+  show('play');
+
+  // Pequeño delay antes de la primera pregunta para que el UI asiente
+  setTimeout(next, 300);
+}
+
+function next(){
+  if(game.correct >= game.total || game.queue.length === 0){ return finish(); }
+  game.current = game.queue.shift();
+  drawProgress();
+  drawQuestion();
+}
+
+function drawProgress(){
+  const p = $('#progress'); p.innerHTML='';
+  for(let i=0;i<game.total;i++){
+    const d = document.createElement('div');
+    d.className = 'pblock' + (i<game.correct?' done':'');
+    p.appendChild(d);
+  }
+  // la bici avanza por la ruta según las respuestas correctas
+  $('#pbike').style.setProperty('--p', Math.min(1, game.correct / game.total));
+}
+
+function drawQuestion(){
+  const st = $('#stage'), op = $('#options');
+  st.innerHTML=''; op.innerHTML=''; op.style.display='grid';
+  const q = game.current;
+
+  if(q.type==='sentence') return drawSentence(q);
+
+  const ore = document.createElement('div');
+  ore.className='oreblock';
+  ore.style.background = game.L.color;
+
+  if(q.type==='img2word'){
+    ore.textContent = q.word.em;
+    st.appendChild(ore);
+    st.appendChild(hint('👆🏽','Toca la palabra correcta'));
+    q.opts.forEach(o => op.appendChild(mkOpt(o.en, false, o.en===q.word.en, ore)));
+    say(q.word.en);
+  }
+  else if(q.type==='word2img'){
+    ore.innerHTML = `<div class="word">${q.word.en}</div>`;
+    st.appendChild(ore);
+    st.appendChild(hint('👆🏽','Toca el dibujo correcto'));
+    q.opts.forEach(o => op.appendChild(mkOpt(o.em, true, o.en===q.word.en, ore)));
+    say(q.word.en);
+  }
+  else if(q.type==='audio2img'){
+    const sp = document.createElement('button');
+    sp.className='block speaker'; sp.innerHTML='<i class="fa-solid fa-volume-high text-white"></i>';
+    sp.setAttribute('aria-label', 'Escuchar la palabra');
+    sp.onclick = ()=>{ playClickSound(); say(q.word.en); };
+    ore.appendChild(sp);
+    st.appendChild(ore);
+    st.appendChild(hint('👂🏽','Escucha y elige'));
+    q.opts.forEach(o => op.appendChild(mkOpt(o.em, true, o.en===q.word.en, ore)));
+    say(q.word.en);
+  }
+}
+
+function hint(icon, text){
+  const d = document.createElement('div');
+  d.className='hint'; d.innerHTML = `<span>${icon}</span> <span>${text}</span>`;
+  return d;
+}
+
+function mkOpt(label, isEmoji, isRight, ore){
+  const b = document.createElement('button');
+  b.className = 'block opt' + (isEmoji?' emoji':'');
+  b.textContent = label;
+  b.onclick = ()=>answer(b, isRight, ore);
+  return b;
+}
+
+function answer(btn, right, ore){
+  document.querySelectorAll('.opt').forEach(o=>{ o.disabled=true; o.onclick=null; });
+  if(right){
+    btn.classList.add('ok');
+    win(ore);
+  }else{
+    btn.classList.add('bad');
+    ore.classList.add('shake');
+    playWrongSound();
+
+    // mostrar la correcta en verde
+    const q = game.current;
+    document.querySelectorAll('.opt').forEach(o=>{
+      const target = (q.type==='img2word') ? q.word.en : q.word.em;
+      if(o.textContent === target){ o.classList.add('ok'); }
+    });
+
+    say(q.word.en);
+    game.errors++;
+    game.streak = 0;
+    $('#streak-pill').style.display='none';
+
+    // Vuelve a meter la pregunta al final de la cola para repasarla
+    game.queue.push(q);
+
+    setTimeout(next, 2000);
+  }
+}
+
+/* ---- frases (nivel 4) ---- */
+function drawSentence(q){
+  const st = $('#stage'), op = $('#options');
+  op.style.display='none';
+  const target = q.data.w;
+  let built = [];
+
+  const ore = document.createElement('div');
+  ore.className='oreblock wide';
+  ore.style.background = game.L.color;
+  ore.style.width='90%'; ore.style.padding='0 26px'; ore.style.height='auto'; ore.style.minHeight='140px';
+  ore.textContent = q.data.em;
+  st.appendChild(ore);
+
+  const sp = document.createElement('button');
+  sp.className='block btn-sec'; sp.innerHTML='<i class="fa-solid fa-volume-high"></i> Escuchar';
+  sp.style.margin = '-10px 0 10px 0';
+  sp.onclick = ()=>{ playClickSound(); say(target.join(' ')); };
+  st.appendChild(sp);
+
+  const slots = document.createElement('div'); slots.className='slots';
+  const tiles = document.createElement('div'); tiles.className='tiles';
+  st.appendChild(slots); st.appendChild(tiles);
+
+  function paint(){
+    slots.innerHTML='';
+    target.forEach((w,i)=>{
+      const s = document.createElement('div');
+      s.className='slot' + (built[i]?' filled':'');
+      s.textContent = built[i]||'';
+      slots.appendChild(s);
+    });
+  }
+  paint();
+
+  shuffle(target.map((w,i)=>({w,i}))).forEach(t=>{
+    const b = document.createElement('button');
+    b.className='block tile'; b.textContent=t.w;
+    b.onclick = ()=>{
+      const pos = built.length;
+      if(t.w === target[pos]){
+        built.push(t.w);
+        b.classList.add('used');
+        paint();
+        beep([500 + pos*100], 0.08, 'sine'); // Escala musical al construir
+
+        if(built.length === target.length){
+          tiles.querySelectorAll('.tile').forEach(x=>x.onclick=null);
+          say(target.join(' '));
+          setTimeout(() => win(ore), 600); // Pequeña pausa para escuchar la frase
+        }
+      }else{
+        b.classList.add('bad'); ore.classList.add('shake'); playWrongSound();
+        setTimeout(()=>{ b.classList.remove('bad'); ore.classList.remove('shake'); }, 500);
+        game.streak = 0; $('#streak-pill').style.display='none';
+      }
+    };
+    tiles.appendChild(b);
+  });
+  say(target.join(' '));
+}
+
+/* ---- acierto ---- */
+function win(ore){
+  playWinSound();
+  ore.classList.add('pop');
+  burst(ore, game.L.color);
+
+  game.correct++;
+  game.streak++;
+  drawProgress(); // la bici avanza en cuanto se acierta
+
+  let gain = 2;
+  const streakPill = $('#streak-pill');
+
+  if(game.streak > 0 && game.streak % 3 === 0){
+    gain += 3;
+    floater('🔥 +5 BONUS', ore);
+    streakPill.style.display='flex';
+    streakPill.classList.add('animate-bounce');
+    setTimeout(()=>streakPill.classList.remove('animate-bounce'), 1000);
+  }else{
+    floater('<i class="fa-solid fa-gem text-gem"></i> +2', ore);
+  }
+
+  if(game.streak >= 2){
+    streakPill.style.display='flex';
+    $('#streak').textContent = game.streak;
+  }
+
+  const before = unlockedCount();
+  S.gems += gain;
+  render(); save();
+
+  if(unlockedCount() > before) {
+      setTimeout(()=>newCharacter(CHARACTERS[unlockedCount()-1]), 1000);
+  } else {
+      setTimeout(next, 1200); // Más tiempo para ver la animación
+  }
+}
+
+/* =========================================================
+   FIN DE NIVEL / MODALES
+   ========================================================= */
+function modal(html){
+    $('#modal-card').innerHTML = html;
+    $('#modal').classList.add('active');
+    // foco en la acción principal (navegación con teclado)
+    const f = $('#modal-card').querySelector('button, a');
+    if(f) setTimeout(()=>f.focus({preventScroll:true}), 60);
+}
+function closeModal(){
+    $('#modal').classList.remove('active');
+}
+
+/* ---- confeti de pantalla completa (fin del juego) ---- */
+function confettiBurstFullscreen(duration=5000, count=180){
+  const layer = document.createElement('div');
+  layer.className = 'confetti-layer';
+  document.body.appendChild(layer);
+  const colors = ['#FFD23F','#FF6B6B','#4CB8E8','#7ED957','#B983FF','#FF9F45','#FFFFFF'];
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className = 'confetti-piece' + (Math.random()>0.7 ? ' round' : '');
+    const size = 6 + Math.random()*9;
+    p.style.width = size + 'px';
+    p.style.height = (Math.random()>0.7 ? size : size*0.45) + 'px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.left = Math.random()*100 + '%';
+    p.style.animationDuration = (2.6 + Math.random()*2.4) + 's';
+    p.style.animationDelay = (Math.random()*1.4) + 's';
+    p.style.setProperty('--rot', (Math.random()*720-360) + 'deg');
+    p.style.setProperty('--drift', (Math.random()*220-110) + 'px');
+    layer.appendChild(p);
+  }
+  setTimeout(()=>layer.remove(), duration + 3000);
+}
+
+function newCharacter(c){
+  playUnlockSound();
+  modal(`
+    <h2>¡NUEVO COMPAÑERO DESBLOQUEADO!</h2>
+    <div style="font-size:90px; margin: 20px 0;" class="hero-guy">${c.em}</div>
+    <div style="font-family:var(--px);font-size:24px;font-weight:900;margin-top:12px;color:#fff">${c.name}</div>
+    <div class="row"><button class="block btn-big" id="m1" style="width:100%; justify-content:center;">¡GENIAL!</button></div>`);
+  say("New friend! " + c.name);
+
+  // Efectos de confeti sobre la tarjeta
+  const card = $('#modal-card');
+  burst(card, '#FFD700');
+  setTimeout(()=>burst(card, '#FF6B6B'), 300);
+  setTimeout(()=>burst(card, '#4CB8E8'), 600);
+
+  $('#m1').onclick = () => {
+      closeModal();
+      playClickSound();
+      next(); // Continua el nivel después de celebrar
+  };
+}
+
+/* ---- premio final: código de descuento ---- */
+const REWARD_CODE = 'SuperBogoKids';
+function showReward(){
+  modal(`
+    <h2>🎁 ¡TU RECOMPENSA!</h2>
+    <p style="font-family:var(--body);font-weight:800;font-size:15px;line-height:1.5;margin:0 0 14px;">
+      Como premio por completar todas las rutas, aquí tienes un código de descuento exclusivo para usar en nuestra tienda:
+    </p>
+    <div class="reward-code" id="reward-code">${REWARD_CODE}</div>
+    <button class="block btn-sec" id="copy-code" style="margin-top:16px;width:100%;justify-content:center;">
+      <i class="fa-regular fa-copy"></i> Copiar código
+    </button>
+    <a href="https://bogofija.netlify.app/" target="_blank" rel="noopener noreferrer" class="block btn-big" style="margin-top:14px;width:100%;justify-content:center;text-decoration:none;">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i> Ir a bogofija.netlify.app
+    </a>
+    <button class="block btn-sec" id="m-reward-map" style="margin-top:14px;width:100%;justify-content:center;background:linear-gradient(160deg,#9AA3AD,var(--stone-dark));">
+      <i class="fa-solid fa-map-location-dot"></i> Volver al mapa
+    </button>`);
+  const copyBtn = $('#copy-code');
+  copyBtn.onclick = async () => {
+    playClickSound();
+    try{
+      await navigator.clipboard.writeText(REWARD_CODE);
+      copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Copiado!';
+      setTimeout(()=>{ copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar código'; }, 2000);
+    }catch(e){ /* clipboard no disponible: el código igual queda visible para copiar a mano */ }
+  };
+  $('#m-reward-map').onclick = ()=>{ playClickSound(); closeModal(); show('map'); };
+}
+
+function finish(){
+  const st = game.errors <= 1 ? 3 : game.errors <= 3 ? 2 : 1;
+  if((S.stars[game.L.id]||0) < st) S.stars[game.L.id] = st;
+  S.gems += 10;
+  save(); render();
+
+  const nextL = LEVELS.find(l => l.id === game.L.id+1);
+
+  if(!nextL){
+    // ¡JUEGO COMPLETO! Gran celebración con confeti a pantalla completa
+    confettiBurstFullscreen(6000, 220);
+    beep([523,659,784,1047,1319,1567,2093], 0.16, 'sine');
+    say("Congratulations! You are a BogoKids champion!");
+    modal(`
+      <h2>🏆 ¡CAMPEÓN BOGOKIDS!</h2>
+      <div style="font-size:76px; margin: 12px 0;" class="hero-guy">🎉</div>
+      <div class="big-stars">${starsHTML(st)}</div>
+      <p style="font-family:var(--body);font-weight:900;font-size:17px;margin:10px 0 4px;">¡Completaste TODAS las rutas de BogoKids!</p>
+      <div class="row">
+        <button class="block btn-big" id="m-reward" style="width:100%;justify-content:center;">🎁 ¡Ver mi premio!</button>
+      </div>`);
+    $('#m-reward').onclick = ()=>{ playClickSound(); showReward(); };
+    return;
+  }
+
+  // Fanfarria de nivel
+  beep([523, 659, 784, 1047, 1319, 1567], 0.15, 'sine');
+
+  modal(`
+    <h2>¡RUTA COMPLETADA!</h2>
+    <div style="font-size:70px; margin: 10px 0;">${game.L.icon}</div>
+    <div class="big-stars">${starsHTML(st)}</div>
+    <div style="font-weight:900;font-size:20px; background:rgba(0,0,0,0.25); padding:10px; border-radius:14px;">
+      <i class="fa-solid fa-gem text-gem"></i> +10 gemas
+    </div>
+    <div style="font-size:16px;font-weight:800;margin-top:16px; color:var(--grass);">🔓 Se abrió: ${nextL.name}</div>
+    <div class="row">
+      <button class="block btn-sec" id="m-again"><i class="fa-solid fa-rotate-right"></i> Otra vez</button>
+      <button class="block btn-big" id="m-map"><i class="fa-solid fa-map-location-dot"></i> Mapa</button>
+    </div>`);
+
+  $('#m-again').onclick = ()=>{ playClickSound(); closeModal(); startLevel(game.L); };
+  $('#m-map').onclick  = ()=>{ playClickSound(); closeModal(); show('map'); };
+}
+
+/* =========================================================
+   NAVEGACIÓN E INICIALIZACIÓN
+   ========================================================= */
+$('#btn-play').onclick      = ()=>{ playClickSound(); show('map'); };
+$('#btn-chars').onclick     = ()=>{ playClickSound(); show('chars'); };
+$('#btn-chars-home').onclick= ()=>{ playClickSound(); show('chars'); };
+$('#chars-back').onclick    = ()=>{ playClickSound(); show('map'); };
+$('#map-home').onclick      = ()=>{ playClickSound(); show('home'); };
+$('#play-back').onclick     = ()=>{ playClickSound(); if('speechSynthesis' in window) speechSynthesis.cancel(); show('map'); };
+$('#btn-repeat').onclick    = ()=>{
+  playClickSound();
+  const q = game && game.current;
+  if(!q) return;
+  say(q.type==='sentence' ? q.data.w.join(' ') : q.word.en);
+};
+
+// Evitar zoom en doble tap (iOS)
+document.addEventListener('dblclick', function(event) {
+  event.preventDefault();
+}, { passive: false });
+
+load();
+})();
+</script>
+
+<footer class="footer-bogo py-10 px-6 text-center relative z-10 w-full mt-auto">
+    <div class="flex flex-wrap items-center justify-center gap-6 md:gap-8 mb-8 max-w-3xl mx-auto">
+        <a href="https://www.instagram.com/bogofija/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+            <img src="https://i.ibb.co/99R1NsRX/Logo-Bogofija-2021.png" alt="Bogofija" class="h-8 md:h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-all">
+        </a>
+        <a href="https://bogochicas.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+            <img src="https://i.ibb.co/qLYvYCrT/Logotipos-Eventos.png" alt="Bogochicas" class="h-8 md:h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-all" />
+        </a>
+        <a href="https://bogoruta.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+            <img src="https://i.ibb.co/cK1KpZbK/bogoruta.png" alt="Bogoruta" class="h-8 md:h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-all" />
+        </a>
+        <a href="https://bogomtb.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+            <img src="https://i.ibb.co/Q3FqNsjH/bogo-MTB.png" alt="Bogo MTB" class="h-8 md:h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-all" />
+        </a>
+        <a href="https://www.instagram.com/bogopublica/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+            <img src="https://i.ibb.co/mCWrvnXQ/logo-Bogo-Publica.png" alt="Bogo Pública" class="h-8 md:h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-all" />
+        </a>
+        <a href="https://www.instagram.com/bogofixie/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+            <img src="https://i.ibb.co/RGSwjNpd/bogofixie.png" alt="Bogo Fixie" class="h-8 md:h-10 w-auto object-contain opacity-70 hover:opacity-100 transition-all" />
+        </a>
+    </div>
+
+    <p class="text-white/80 text-sm mb-2 font-bold">Bogotá, Colombia</p>
+    <a href="mailto:bogofija@gmail.com" class="text-white hover:text-brand-yellow font-black block mb-8 transition-colors">bogofija@gmail.com</a>
+
+    <div class="flex justify-center items-center gap-6 mb-8">
+        <a href="https://www.tiktok.com/@bogofija" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-brand-yellow text-xl transition-colors" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.strava.com/clubs/bogofija" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-brand-yellow text-xl transition-colors" aria-label="Strava"><i class="fa-brands fa-strava"></i></a>
+        <a href="https://www.instagram.com/bogofija/" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-brand-yellow text-xl transition-colors" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.youtube.com/channel/UCi5ZT2D3YvF3M3_dDLtwVXg" target="_blank" rel="noopener noreferrer" class="text-white/70 hover:text-brand-yellow text-xl transition-colors" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+    </div>
+
+    <p class="text-white/60 text-xs font-bold tracking-wide text-center mb-1">&copy;2026 BOGOFIJA · Todos los derechos reservados.</p>
+    <p class="text-white/60 text-xs font-bold tracking-wide text-center">
+        Diseñado y desarrollado por <a href="https://sneyder.netlify.app/" target="_blank" rel="noopener noreferrer" class="text-[#FF7A2F] hover:text-brand-yellow underline underline-offset-2 transition-colors">Art Sneyder</a> · 2023
+    </p>
+</footer>
+</body>
+</html>

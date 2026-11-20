@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calculadora de Optimización de Material</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+          mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
+          display: ["'Space Grotesk'", "Inter", "sans-serif"],
+        },
+      },
+    },
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  html, body { background:#05050A; color:#fff; }
+  body { -webkit-font-smoothing: antialiased; }
+  ::selection { background: rgba(255,46,147,0.35); }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  @keyframes pieceIn {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes scanDown {
+    0%   { transform: translateY(0); opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translateY(var(--scan)); opacity: 0; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes floatA {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(6vw,4vh) scale(1.12); }
+  }
+  @keyframes floatB {
+    0%,100% { transform: translate(0,0) scale(1); }
+    50%     { transform: translate(-5vw,-6vh) scale(1.08); }
+  }
+  @keyframes shimmer {
+    from { background-position: 0% 50%; }
+    to   { background-position: 200% 50%; }
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.85); opacity: 0; }
+    60% { transform: scale(1.04); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .fade-up { animation: fadeUp .6s cubic-bezier(.2,.7,.2,1) both; }
+  .text-shimmer {
+    background: linear-gradient(90deg,#22E6FF,#FF2E93,#FFD400,#22E6FF);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+  .dot-grid {
+    background-image: radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
+            mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
+  }
+  select option { background:#0E0E14; color:#fff; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useRef, useCallback, useEffect } = React;
+
+/* ---------------------------------------------------------------------
+   ÍCONOS (SVG locales, mismo API que lucide-react: className, strokeWidth)
+--------------------------------------------------------------------- */
+function makeIcon(children) {
+  return function Icon({ className, strokeWidth = 2, style }) {
+    return (
+      <svg
+        className={className}
+        style={style}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {children}
+      </svg>
+    );
+  };
+}
+
+const Layers = makeIcon(
+  <>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </>
+);
+const Scissors = makeIcon(
+  <>
+    <circle cx="6" cy="6" r="3" />
+    <circle cx="6" cy="18" r="3" />
+    <line x1="20" y1="4" x2="8.12" y2="15.88" />
+    <line x1="14.47" y1="14.48" x2="20" y2="20" />
+    <line x1="8.12" y1="8.12" x2="12" y2="12" />
+  </>
+);
+const RotateCw = makeIcon(
+  <>
+    <path d="M21 12a9 9 0 1 1-3.51-7.14" />
+    <polyline points="21 3 21 9 15 9" />
+  </>
+);
+const AlertTriangle = makeIcon(
+  <>
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </>
+);
+const Sparkles = makeIcon(
+  <>
+    <path d="M12 3l1.6 4.9L18.5 9.5l-4.9 1.6L12 16l-1.6-4.9L5.5 9.5l4.9-1.6L12 3z" />
+    <path d="M19 15l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7.7-2.1z" />
+  </>
+);
+const RefreshCcw = makeIcon(
+  <>
+    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+    <path d="M21 3v5h-5" />
+    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+    <path d="M3 21v-5h5" />
+  </>
+);
+const Clipboard = makeIcon(
+  <>
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+  </>
+);
+const Check = makeIcon(<polyline points="20 6 9 17 4 12" />);
+const Ruler = makeIcon(
+  <>
+    <rect x="2" y="7" width="20" height="10" rx="1.5" />
+    <path d="M6 7v3M10 7v5M14 7v3M18 7v5" />
+  </>
+);
+const Droplet = makeIcon(<path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />);
+const Sun = makeIcon(
+  <>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </>
+);
+const Flame = makeIcon(
+  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+);
+const SwapIcon = makeIcon(
+  <>
+    <path d="M8 3 4 7l4 4" />
+    <path d="M4 7h16" />
+    <path d="m16 21 4-4-4-4" />
+    <path d="M20 17H4" />
+  </>
+);
+const Minus = makeIcon(<line x1="5" y1="12" x2="19" y2="12" />);
+const Plus = makeIcon(
+  <>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </>
+);
+const MessageCircle = makeIcon(<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />);
+const Wide = makeIcon(<rect x="2.5" y="7" width="19" height="10" rx="2" />);
+const Tall = makeIcon(<rect x="7" y="2.5" width="10" height="19" rx="2" />);
+const Pencil = makeIcon(
+  <>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </>
+);
+
+/* ---------------------------------------------------------------------
+   MOTOR DE CÁLCULO
+
+   Nuevo modelo: el ANCHO del montaje/pliego es el parámetro fijo (por
+   ejemplo, el ancho de un rollo de material). El ALTO ya no se digita:
+   se calcula automáticamente a partir de cuántas piezas caben por fila
+   (según el ancho) y cuántas filas se necesitan para cubrir la cantidad
+   requerida. Así el alto queda siempre ajustado exacto, sin sobrantes
+   de alto, y el único desperdicio estructural quedará en el ancho
+   (la franja que sobra en cada fila si la pieza no divide el ancho de
+   forma exacta).
+--------------------------------------------------------------------- */
+
+function evalOrientation(W, unitW, unitH, req) {
+  const cols = Math.floor(W / unitW);
+  if (!isFinite(cols) || cols <= 0) return { valid: false, cols: 0 };
+  const rows = req > 0 ? Math.ceil(req / cols) : 0;
+  const alto = rows * unitH;
+  const capacity = cols * rows;
+  const wasteWidth = Math.max(0, W - cols * unitW);
+  // Excedente real de piezas producidas frente a las requeridas, dado que
+  // el material solo puede cortarse por filas completas (no filas parciales).
+  const surplus = Math.max(0, capacity - req);
+  // Alto del desperdicio: longitud vertical de material que se consume de
+  // más por tener que completar la última fila con piezas excedentes.
+  // Se deriva de la MISMA distribución (cols/rows/excedente) que usa el
+  // resto de la calculadora, nunca de una fórmula independiente.
+  const wasteHeight = cols > 0 ? (surplus / cols) * unitH : 0;
+  return { valid: true, cols, rows, alto, capacity, unitW, unitH, wasteWidth, surplus, wasteHeight };
+}
+
+function makeGridPieces(cols, rows, unitW, unitH) {
+  const pieces = [];
+  let idx = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      pieces.push({ idx: idx++, x: c * unitW, y: r * unitH, w: unitW, h: unitH });
+    }
+  }
+  return pieces;
+}
+
+function useCuttingCalculation({ sheetW, pieceW, pieceH, required, mode }) {
+  return useMemo(() => {
+    const W = parseFloat(sheetW);
+    const pw = parseFloat(pieceW);
+    const ph = parseFloat(pieceH);
+    const req = Math.round(parseFloat(required));
+
+    const fieldsValid = isFinite(W) && W > 0 && isFinite(pw) && pw > 0 && isFinite(ph) && ph > 0;
+    if (!fieldsValid) return { valid: false, reason: "fields" };
+
+    const reqValid = isFinite(req) && req > 0;
+    if (!reqValid) return { valid: false, reason: "qty", W, pw, ph };
+
+    const H_ = evalOrientation(W, pw, ph, req); // pieza en orientación normal
+    const V_ = evalOrientation(W, ph, pw, req); // pieza rotada 90°
+
+    if (!H_.valid && !V_.valid) return { valid: false, reason: "nofit", W, pw, ph };
+
+    let key;
+    if (mode === "horizontal") key = H_.valid ? "horizontal" : "vertical";
+    else if (mode === "vertical") key = V_.valid ? "vertical" : "horizontal";
+    else {
+      if (H_.valid && V_.valid) {
+        if (H_.alto < V_.alto) key = "horizontal";
+        else if (V_.alto < H_.alto) key = "vertical";
+        else key = H_.wasteWidth <= V_.wasteWidth ? "horizontal" : "vertical";
+      } else {
+        key = H_.valid ? "horizontal" : "vertical";
+      }
+    }
+
+    const usedFallback = mode !== "auto" && key !== mode;
+    const chosen = key === "horizontal" ? H_ : V_;
+    const unitW = key === "horizontal" ? pw : ph;
+    const unitH = key === "horizontal" ? ph : pw;
+
+    const sheetArea = W * chosen.alto;
+    const pieceArea = pw * ph;
+    const usedArea = chosen.capacity * pieceArea;
+    const wasteArea = Math.max(0, sheetArea - usedArea);
+    const wastePct = sheetArea > 0 ? (100 * wasteArea) / sheetArea : 0;
+    const wasteHeight = chosen.wasteHeight;
+    const surplus = chosen.surplus;
+
+    return {
+      valid: true,
+      key,
+      requestedMode: mode,
+      usedFallback,
+      W,
+      alto: chosen.alto,
+      pw,
+      ph,
+      unitW,
+      unitH,
+      required: req,
+      cols: chosen.cols,
+      rows: chosen.rows,
+      capacity: chosen.capacity,
+      surplus,
+      wasteWidth: chosen.wasteWidth,
+      wasteHeight,
+      wasteArea,
+      wastePct,
+      sheetArea,
+      aprovechamiento: 100 - wastePct,
+      pieces: makeGridPieces(chosen.cols, chosen.rows, unitW, unitH),
+      compare: { horizontal: H_, vertical: V_ },
+    };
+  }, [sheetW, pieceW, pieceH, required, mode]);
+}
+
+/* --------------------------------------------------------------------- */
+
+function niceStep(span) {
+  if (span <= 30) return 5;
+  if (span <= 80) return 10;
+  if (span <= 200) return 25;
+  if (span <= 500) return 50;
+  if (span <= 1500) return 100;
+  if (span <= 5000) return 500;
+  return 1000;
+}
+
+/* Paso de regla que respeta un espacio mínimo entre etiquetas. */
+function rulerStep(span, minGap) {
+  const base = niceStep(span);
+  const steps = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+  return steps.find((s) => s >= base && s >= minGap) || steps[steps.length - 1];
+}
+
+function fmt(n, d = 1) {
+  if (!isFinite(n)) return "—";
+  return n.toLocaleString("es-CO", { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+/* Número animado (cuenta suave hacia el nuevo valor). */
+function useAnimatedNumber(target, duration = 650) {
+  const [val, setVal] = useState(isFinite(target) ? target : 0);
+  const valRef = useRef(val);
+  useEffect(() => {
+    if (!isFinite(target)) return;
+    const from = valRef.current;
+    if (from === target) return;
+    const finish = () => {
+      valRef.current = target;
+      setVal(target);
+    };
+    // Si la pestaña está oculta requestAnimationFrame no corre: valor directo.
+    if (document.hidden) {
+      finish();
+      return;
+    }
+    const start = performance.now();
+    let raf;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const e = 1 - Math.pow(1 - t, 3);
+      const v = from + (target - from) * e;
+      valRef.current = v;
+      setVal(v);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // Respaldo: garantiza el valor final aunque la animación se pause.
+    const done = setTimeout(() => {
+      cancelAnimationFrame(raf);
+      finish();
+    }, duration + 80);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(done);
+    };
+  }, [target, duration]);
+  return val;
+}
+
+function AnimatedNumber({ value, decimals = 0 }) {
+  const v = useAnimatedNumber(value);
+  return <>{decimals === 0 ? fmt(Math.round(v), 0) : fmt(v, decimals)}</>;
+}
+
+function rating(p) {
+  if (p >= 90) return { label: "Excelente", color: "#22E6FF", glow: "rgba(34,230,255,0.45)" };
+  if (p >= 75) return { label: "Muy bueno", color: "#FF2E93", glow: "rgba(255,46,147,0.45)" };
+  if (p >= 60) return { label: "Aceptable", color: "#FFD400", glow: "rgba(255,212,0,0.4)" };
+  return { label: "Bajo", color: "#FF6A3D", glow: "rgba(255,106,61,0.45)" };
+}
+
+/* ---------------------------------------------------------------------
+   CATÁLOGO DE CATEGORÍAS / MATERIALES / ANCHOS DE ROLLO
+
+   Nota: en "Vinilo" (Solvente) se incluyó 146,5 cm dentro de los anchos
+   disponibles para que el valor predeterminado de la aplicación
+   (Solvente → Vinilo → 146,5 cm) sea seleccionable directamente.
+--------------------------------------------------------------------- */
+
+function labelCm(n) {
+  const s = Number.isInteger(n) ? String(n) : String(n).replace(".", ",");
+  return `${s} cm`;
+}
+
+function rollSizes(values) {
+  return values.map((w) => ({ label: labelCm(w), value: w }));
+}
+
+const MATERIALS_DATA = {
+  solvente: {
+    label: "Solvente",
+    materials: [
+      { name: "Banner 13 Onzas", sizes: rollSizes([105, 120, 150, 180, 202, 220, 250, 320]) },
+      { name: "Vinilo", sizes: rollSizes([70, 105, 122, 140, 146.5, 152]) },
+      { name: "Vinilo Floorgraphic", sizes: rollSizes([137]) },
+      { name: "Mesh", sizes: rollSizes([100, 122, 202]) },
+      { name: "Panaflex 16 Oz", sizes: rollSizes([120, 150]) },
+      { name: "Microperforado", sizes: rollSizes([100, 138, 150]) },
+      { name: "Imán Nevera", sizes: rollSizes([60]) },
+      { name: "Imán Carro", sizes: rollSizes([60]) },
+      { name: "Señalización en Poliestireno", sizes: rollSizes([98, 118]) },
+    ],
+  },
+  uv: {
+    label: "Impresión UV",
+    materials: [
+      { name: "Banner 13 oz - Impresión UV", sizes: rollSizes([105, 120, 150]) },
+      { name: "Propalcote 240gr. - Impresión UV", sizes: rollSizes([135]) },
+      { name: "Vinilo - Impresión UV", sizes: rollSizes([70, 105, 122, 140, 152]) },
+      { name: "Polipropileno - Impresión UV", sizes: rollSizes([62]) },
+      { name: "Papel adhesivo de seguridad - Impresión UV", sizes: rollSizes([108]) },
+      { name: "Tela Samba - Impresión UV", sizes: rollSizes([146]) },
+      { name: "Tela Lienzo - Impresión UV", sizes: rollSizes([146]) },
+      { name: "Backlite - Impresión UV", sizes: rollSizes([118, 148]) },
+      { name: "Holográfico o tornasol - Impresión UV", sizes: rollSizes([120]) },
+    ],
+  },
+  sublimacion: {
+    label: "Sublimación",
+    materials: [
+      { name: "Tela Tifón 90gr.", sizes: rollSizes([147]) },
+      { name: "Tela Fénix 190gr.", sizes: rollSizes([157]) },
+      { name: "Tela Solar 230gr.", sizes: rollSizes([157]) },
+      { name: "Tela Backlite 250gr.", sizes: rollSizes([300]) },
+    ],
+  },
+};
+
+/* Color por categoría: Solvente -> azul · Impresión UV -> morado · Sublimación -> naranja. */
+const CATEGORY_COLORS = {
+  solvente: { bg: "#2F6FEB", text: "#ffffff", icon: Droplet, hint: "Exterior · alta duración" },
+  uv: { bg: "#9B3FF2", text: "#ffffff", icon: Sun, hint: "Curado instantáneo" },
+  sublimacion: { bg: "#FF8A1E", text: "#000000", icon: Flame, hint: "Telas y textiles" },
+};
+
+/* Tamaños de pieza frecuentes para cargar con un clic. */
+const PIECE_PRESETS = [
+  { label: "Carta", w: 21.6, h: 27.9 },
+  { label: "A4", w: 21, h: 29.7 },
+  { label: "A3", w: 29.7, h: 42 },
+  { label: "50×70", w: 50, h: 70 },
+  { label: "70×100", w: 70, h: 100 },
+  { label: "Pendón", w: 60, h: 160 },
+];
+
+const QTY_PRESETS = [1, 10, 25, 50, 100, 500];
+
+/* ---------------------------------------------------------------------
+   UI BASE
+--------------------------------------------------------------------- */
+
+const CARD =
+  "rounded-3xl border border-white/[0.07] bg-[#0C0C12]/80 backdrop-blur-xl shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]";
+
+function StepHeader({ n, title, hint, right }) {
+  return (
+    <div className="mb-3 flex items-center gap-3">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF2E93] to-[#B3125F] font-display text-xs font-bold text-white shadow-[0_0_18px_rgba(255,46,147,0.45)]">
+        {n}
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-sm font-semibold leading-tight text-white">{title}</h2>
+        {hint && <p className="truncate text-[11px] text-[#6f6f80]">{hint}</p>}
+      </div>
+      {right && <div className="ml-auto shrink-0">{right}</div>}
+    </div>
+  );
+}
+
+function Chip({ active, onClick, children, color = "#FF2E93", textColor = "#000", title }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      style={active ? { backgroundColor: color, color: textColor, borderColor: color, boxShadow: `0 0 18px -4px ${color}` } : undefined}
+      className={
+        "rounded-xl border px-2.5 py-1.5 font-mono text-xs font-semibold transition-all active:scale-95 " +
+        (active ? "" : "border-white/[0.08] bg-white/[0.03] text-[#b4b4c2] hover:border-white/20 hover:bg-white/[0.06] hover:text-white")
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+function NumberField({ label, unit, value, onChange, invalid, stepper, min = 0, big }) {
+  const bump = (d) => {
+    const v = parseFloat(value);
+    const base = isFinite(v) ? v : 0;
+    const next = Math.max(min, Math.round((base + d) * 100) / 100);
+    onChange(String(next));
+  };
+  const stepBtn =
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-[#c9c9d4] transition-all hover:bg-[#FF2E93] hover:text-black active:scale-90";
+  return (
+    <div className="block min-w-0">
+      {label && (
+        <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">{label}</span>
+      )}
+      <div
+        className={
+          "flex items-center gap-1 rounded-2xl border bg-[#07070C] p-1 transition-all " +
+          (invalid
+            ? "border-[#FFD400]/60 shadow-[0_0_0_4px_rgba(255,212,0,0.08)]"
+            : "border-white/[0.08] hover:border-white/[0.16] focus-within:border-[#FF2E93] focus-within:shadow-[0_0_0_4px_rgba(255,46,147,0.14)]")
+        }
+      >
+        {stepper && (
+          <button type="button" aria-label="Disminuir" className={stepBtn} onClick={() => bump(-1)}>
+            <Minus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        )}
+        <input
+          type="number"
+          step="any"
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          className={
+            "w-full min-w-0 bg-transparent font-mono font-bold text-white outline-none placeholder-[#3d3d4a] " +
+            (stepper ? "text-center " : "pl-2.5 ") +
+            (big ? "py-1.5 text-3xl" : "py-2 text-lg")
+          }
+          placeholder="0"
+        />
+        {unit && <span className="shrink-0 pr-2 text-xs font-semibold text-[#6b6b78]">{unit}</span>}
+        {stepper && (
+          <button type="button" aria-label="Aumentar" className={stepBtn} onClick={() => bump(1)}>
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------
+   RESULTADOS
+--------------------------------------------------------------------- */
+
+function Gauge({ pct }) {
+  const a = useAnimatedNumber(pct);
+  const r = 50;
+  const c = 2 * Math.PI * r;
+  const clamped = Math.max(0, Math.min(100, a));
+  const off = c * (1 - clamped / 100);
+  const rt = rating(pct);
+  return (
+    <div className="relative h-36 w-36 shrink-0 sm:h-40 sm:w-40">
+      <div className="absolute inset-4 rounded-full blur-2xl" style={{ background: rt.glow, opacity: 0.55 }} />
+      <svg viewBox="0 0 120 120" className="relative h-full w-full">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={rt.color} />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="9" />
+        {Array.from({ length: 40 }).map((_, i) => {
+          const ang = (i / 40) * Math.PI * 2 - Math.PI / 2;
+          const x1 = 60 + Math.cos(ang) * 40, y1 = 60 + Math.sin(ang) * 40;
+          const x2 = 60 + Math.cos(ang) * 42.5, y2 = 60 + Math.sin(ang) * 42.5;
+          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.12)" strokeWidth="0.8" />;
+        })}
+        <circle
+          cx="60"
+          cy="60"
+          r={r}
+          fill="none"
+          stroke="url(#gaugeGrad)"
+          strokeWidth="9"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={off}
+          transform="rotate(-90 60 60)"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="font-display text-3xl font-bold leading-none text-white sm:text-[34px]">
+          {fmt(clamped, 1)}
+          <span className="text-base text-[#8a8a99]">%</span>
+        </div>
+        <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: rt.color }}>
+          {rt.label}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, children, unit, sub, accent }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-3.5 py-3 transition-colors hover:bg-white/[0.04]">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">{label}</div>
+      <div className="mt-1 flex items-baseline gap-1 font-mono text-xl font-bold" style={{ color: accent || "#fff" }}>
+        {children}
+        {unit && <span className="text-xs font-medium text-[#6b6b78]">{unit}</span>}
+      </div>
+      {sub && <div className="mt-0.5 text-[11px] text-[#6b6b78]">{sub}</div>}
+    </div>
+  );
+}
+
+function HeroResult({ calc, materialName }) {
+  if (!calc.valid) {
+    const messages = {
+      fields: "Introduce medidas válidas (mayores que cero) para calcular la distribución.",
+      qty: "Introduce la cantidad requerida para calcular el alto y la distribución.",
+      nofit: "La pieza no cabe en el ancho del rollo en ninguna orientación. Revisa las medidas o elige un rollo más ancho.",
+    };
+    return (
+      <div className={CARD + " flex items-start gap-4 p-6"}>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FFD400]/10 text-[#FFD400]">
+          <AlertTriangle className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="font-display text-lg font-semibold text-white">Faltan datos para calcular</div>
+          <p className="mt-1 text-sm leading-relaxed text-[#a3a3b2]">{messages[calc.reason] || messages.fields}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl bg-gradient-to-br from-[#FF2E93]/70 via-white/[0.06] to-[#22E6FF]/60 p-px shadow-[0_30px_90px_-40px_rgba(255,46,147,0.6)]">
+      <div className="relative overflow-hidden rounded-[23px] bg-[#0B0B11]/95 p-5 sm:p-7">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[#FF2E93]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-[#22E6FF]/10 blur-3xl" />
+
+        <div className="relative flex flex-col-reverse items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#FF2E93]">
+                <Sparkles className="h-3.5 w-3.5" /> Resultado de producción
+              </span>
+              <span className="truncate rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-medium text-[#a3a3b2]">
+                {materialName}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-end gap-x-3">
+              <span className="font-display text-7xl font-bold leading-[0.9] tracking-tight text-white sm:text-8xl">
+                <AnimatedNumber value={calc.capacity} />
+              </span>
+              <span className="pb-2 text-lg font-medium text-[#a3a3b2]">piezas</span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#a3a3b2]">
+              <span className="rounded-lg bg-white/[0.05] px-2 py-1 font-mono text-xs text-white">
+                {calc.cols} por fila
+              </span>
+              <span className="text-[#4b4b57]">×</span>
+              <span className="rounded-lg bg-white/[0.05] px-2 py-1 font-mono text-xs text-white">
+                {calc.rows} {calc.rows === 1 ? "fila" : "filas"}
+              </span>
+              <span className="flex items-center gap-1 rounded-lg bg-[#22E6FF]/10 px-2 py-1 text-xs font-semibold text-[#22E6FF]">
+                {calc.key === "horizontal" ? <Wide className="h-3.5 w-3.5" /> : <Tall className="h-3.5 w-3.5" />}
+                {calc.key === "horizontal" ? "Horizontal" : "Vertical"}
+              </span>
+            </div>
+          </div>
+          <Gauge pct={calc.aprovechamiento} />
+        </div>
+
+        <div className="relative mt-6 grid grid-cols-2 gap-2.5 md:grid-cols-4">
+          <Stat label="Requeridas" unit="uds">
+            <AnimatedNumber value={calc.required} />
+          </Stat>
+          <Stat label="Excedente" unit="uds" accent={calc.surplus > 0 ? "#22E6FF" : "#fff"} sub={calc.surplus > 0 ? "piezas extra" : "ajuste exacto"}>
+            <AnimatedNumber value={calc.surplus} />
+          </Stat>
+          <Stat label="Alto a imprimir" unit="cm" accent="#FF2E93" sub={`= ${fmt(calc.alto / 100, 2)} m lineales`}>
+            <AnimatedNumber value={calc.alto} decimals={1} />
+          </Stat>
+          <Stat label="Ancho rollo" unit="cm" sub={`${fmt(calc.sheetArea / 10000, 2)} m² de material`}>
+            <AnimatedNumber value={calc.W} decimals={1} />
+          </Stat>
+        </div>
+
+        {calc.usedFallback && (
+          <div className="relative mt-4 flex items-center gap-2 rounded-xl border border-[#FFD400]/20 bg-[#FFD400]/10 px-3 py-2 text-xs text-[#FFD400]">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            La orientación "{calc.requestedMode}" no cabe en el ancho — se aplicó "{calc.key}" automáticamente.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WasteCard({ calc }) {
+  return (
+    <div className={CARD + " p-5"}>
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FFD400]/12 text-[#FFD400]">
+          <Ruler className="h-4 w-4" />
+        </span>
+        Desperdicio de material
+      </div>
+      {calc.valid ? (
+        <>
+          <div className="grid grid-cols-2 gap-2.5">
+            {[
+              { l: "Ancho", v: calc.wasteWidth, s: "franja por fila" },
+              { l: "Alto", v: calc.wasteHeight, s: "por excedentes" },
+            ].map((x) => (
+              <div key={x.l} className="rounded-2xl border border-[#FFD400]/15 bg-gradient-to-b from-[#FFD400]/[0.08] to-transparent p-3.5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c9a800]">{x.l}</div>
+                <div className="mt-1 font-mono text-2xl font-bold text-[#FFD400]">
+                  <AnimatedNumber value={x.v} decimals={1} />
+                  <span className="ml-1 text-xs font-medium text-[#c9a800]">cm</span>
+                </div>
+                <div className="text-[11px] text-[#8a7a3a]">{x.s}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <div className="mb-1.5 flex justify-between text-[11px] font-medium">
+              <span className="text-[#FF2E93]">Usado {fmt(calc.aprovechamiento, 1)}%</span>
+              <span className="text-[#FFD400]">Sobra {fmt(calc.wastePct, 1)}%</span>
+            </div>
+            <div className="flex h-2.5 overflow-hidden rounded-full bg-white/[0.05]">
+              <div
+                className="h-full rounded-l-full bg-gradient-to-r from-[#B3125F] to-[#FF2E93] transition-all duration-700"
+                style={{ width: `${calc.aprovechamiento}%` }}
+              />
+              <div
+                className="h-full bg-[repeating-linear-gradient(45deg,#FFD400_0_4px,rgba(255,212,0,0.35)_4px_8px)] transition-all duration-700"
+                style={{ width: `${calc.wastePct}%` }}
+              />
+            </div>
+            <p className="mt-2.5 text-[11px] leading-relaxed text-[#6f6f80]">
+              {fmt(calc.wasteArea / 10000, 3)} m² sin usar ({fmt(calc.wasteArea, 0)} cm²).
+            </p>
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-[#6b6b78]">Completa las medidas y la cantidad para calcular el desperdicio.</p>
+      )}
+    </div>
+  );
+}
+
+function SheetVisualization({ calc }) {
+  const containerRef = useRef(null);
+  const [hover, setHover] = useState(null);
+
+  const valid = calc.valid;
+  const W = valid ? calc.W : 100;
+  const alto = valid ? calc.alto : 100;
+  const cols = valid ? calc.cols : 0;
+  const unitW = valid ? calc.unitW : 0;
+  const wasteWidth = valid ? calc.wasteWidth : 0;
+  const pieces = valid ? calc.pieces : [];
+  const required = valid ? calc.required : 0;
+
+  const u = Math.max(W, alto);
+  const marginTop = u * 0.12;
+  const marginLeft = u * 0.13;
+  const marginRight = u * 0.14;
+  const marginBottom = u * 0.09;
+  const fs = u * 0.034;
+
+  const viewBox = `${-marginLeft} ${-marginTop} ${W + marginLeft + marginRight} ${alto + marginTop + marginBottom}`;
+  const stepX = rulerStep(W, fs * 2.6);
+  const stepY = rulerStep(alto, fs * 1.6);
+  const ticksX = [];
+  for (let t = 0; t <= W + 0.001; t += stepX) ticksX.push(t);
+  const ticksY = [];
+  for (let t = 0; t <= alto + 0.001; t += stepY) ticksY.push(t);
+
+  const hatchSize = u * 0.02;
+  const gapCm = u * 0.005;
+  const showLabels = pieces.length > 0 && pieces.length <= 80;
+  const versionKey = `${W}-${alto}-${pieces.length}-${valid ? calc.key : "x"}`;
+  const dimX = W + marginRight * 0.45;
+  const sw = u * 0.0035;
+
+  const handleMove = useCallback((e, idx, p) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = Math.min(e.clientX - rect.left + 16, rect.width - 170);
+    setHover({ idx, p, x, y: e.clientY - rect.top + 16 });
+  }, []);
+
+  return (
+    <div className={CARD + " relative overflow-hidden p-5"} ref={containerRef}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FF2E93]/12 text-[#FF2E93]">
+            <Scissors className="h-4 w-4" strokeWidth={2.25} />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Vista previa del montaje</h3>
+            {valid && (
+              <p className="font-mono text-[11px] text-[#6f6f80]">
+                {fmt(W, 1)} × {fmt(alto, 1)} cm
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#a3a3b2]">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded bg-gradient-to-br from-[#FF5AAE] to-[#D11A72]" /> Requerida
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded border border-dashed border-[#22E6FF] bg-[#22E6FF]/10" /> Excedente
+          </span>
+          {wasteWidth > 0.01 && (
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded border border-[#FFD400]/60 bg-[#FFD400]/25" /> Desperdicio
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-white/[0.05] bg-[#06060A] p-3 sm:p-4">
+        <div style={{ aspectRatio: `${W + marginLeft + marginRight} / ${alto + marginTop + marginBottom}`, maxHeight: "560px" }} className="mx-auto w-full">
+          {valid ? (
+            <svg viewBox={viewBox} width="100%" height="100%" className="overflow-visible">
+              <defs>
+                <pattern id="waste-hatch-base" width={hatchSize} height={hatchSize} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <rect width={hatchSize} height={hatchSize} fill="#101017" />
+                  <line x1="0" y1="0" x2="0" y2={hatchSize} stroke="#1b1b26" strokeWidth={hatchSize * 0.35} />
+                </pattern>
+                <pattern id="waste-hatch-alert" width={hatchSize} height={hatchSize} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <rect width={hatchSize} height={hatchSize} fill="#1a1608" />
+                  <line x1="0" y1="0" x2="0" y2={hatchSize} stroke="#FFD400" strokeOpacity="0.45" strokeWidth={hatchSize * 0.32} />
+                </pattern>
+                <linearGradient id="pieceGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#FF5AAE" />
+                  <stop offset="100%" stopColor="#D11A72" />
+                </linearGradient>
+                <linearGradient id="scanGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22E6FF" stopOpacity="0" />
+                  <stop offset="85%" stopColor="#22E6FF" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+                </linearGradient>
+              </defs>
+
+              {/* Regla superior e izquierda */}
+              <g fontSize={fs} fill="#5fd8e8" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                {ticksX.map((t, i) => (
+                  <g key={"tx" + i}>
+                    <line x1={t} y1={-marginTop * 0.22} x2={t} y2={0} stroke="#2f2f3b" strokeWidth={sw} />
+                    <text x={t} y={-marginTop * 0.34} textAnchor="middle">{Math.round(t)}</text>
+                  </g>
+                ))}
+                {ticksY.map((t, i) => (
+                  <g key={"ty" + i}>
+                    <line x1={-marginLeft * 0.2} y1={t} x2={0} y2={t} stroke="#2f2f3b" strokeWidth={sw} />
+                    <text x={-marginLeft * 0.3} y={t} textAnchor="end" dominantBaseline="middle">{Math.round(t)}</text>
+                  </g>
+                ))}
+              </g>
+
+              {/* Pliego */}
+              <rect x={0} y={0} width={W} height={alto} fill="url(#waste-hatch-base)" stroke="#2c2c3a" strokeWidth={sw * 1.5} />
+
+              {/* Franja de desperdicio de ancho */}
+              {wasteWidth > 0.01 && (
+                <rect
+                  x={cols * unitW}
+                  y={0}
+                  width={wasteWidth}
+                  height={alto}
+                  fill="url(#waste-hatch-alert)"
+                  stroke="#FFD400"
+                  strokeOpacity="0.5"
+                  strokeWidth={sw}
+                />
+              )}
+
+              {/* Piezas */}
+              <g key={versionKey}>
+                {pieces.map((p, i) => {
+                  const inset = Math.min(gapCm, p.w * 0.05, p.h * 0.05);
+                  const isHovered = hover?.idx === i;
+                  const isRequired = p.idx < required;
+                  const delay = Math.min(i * 0.025, 0.7);
+                  return (
+                    <g
+                      key={i}
+                      onMouseMove={(e) => handleMove(e, i, p)}
+                      onMouseLeave={() => setHover((h) => (h?.idx === i ? null : h))}
+                      style={{
+                        cursor: "pointer",
+                        animation: `pieceIn .45s cubic-bezier(.2,.8,.2,1.2) ${delay}s both`,
+                        transformBox: "fill-box",
+                        transformOrigin: "center",
+                      }}
+                    >
+                      <rect
+                        x={p.x + inset}
+                        y={p.y + inset}
+                        width={p.w - inset * 2}
+                        height={p.h - inset * 2}
+                        rx={Math.min(p.w, p.h) * 0.06}
+                        fill={isRequired ? "url(#pieceGrad)" : "rgba(34,230,255,0.08)"}
+                        fillOpacity={isRequired ? (isHovered ? 1 : 0.92) : 1}
+                        stroke={isRequired ? (isHovered ? "#ffffff" : "rgba(255,255,255,0.18)") : "#22E6FF"}
+                        strokeDasharray={isRequired ? "0" : `${Math.min(p.w, p.h) * 0.06} ${Math.min(p.w, p.h) * 0.04}`}
+                        strokeWidth={isHovered ? sw * 2.5 : sw}
+                        style={{ transition: "stroke 0.15s, fill-opacity 0.15s" }}
+                      />
+                      {showLabels && (
+                        <text
+                          x={p.x + p.w / 2}
+                          y={p.y + p.h / 2}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill={isRequired ? "rgba(0,0,0,0.75)" : "#22E6FF"}
+                          fontSize={Math.min(p.w, p.h) * 0.15}
+                          style={{ fontFamily: "'JetBrains Mono', monospace", pointerEvents: "none", fontWeight: 700 }}
+                        >
+                          {fmt(p.w, Number.isInteger(p.w) ? 0 : 1)}×{fmt(p.h, Number.isInteger(p.h) ? 0 : 1)}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+
+              {/* Láser de escaneo al recalcular */}
+              <g key={"scan-" + versionKey} style={{ animation: "scanDown 1.1s cubic-bezier(.45,0,.2,1) both", "--scan": `${alto}px` }}>
+                <rect x={0} y={-u * 0.06} width={W} height={u * 0.06} fill="url(#scanGrad)" style={{ pointerEvents: "none" }} />
+              </g>
+
+              {/* Cota de alto (derecha) */}
+              <g stroke="#FF2E93" strokeWidth={sw * 1.2}>
+                <line x1={dimX} y1={0} x2={dimX} y2={alto} />
+                <line x1={dimX - u * 0.012} y1={0} x2={dimX + u * 0.012} y2={0} />
+                <line x1={dimX - u * 0.012} y1={alto} x2={dimX + u * 0.012} y2={alto} />
+              </g>
+              <text
+                x={dimX + u * 0.03}
+                y={alto / 2}
+                fontSize={fs}
+                fill="#FF2E93"
+                textAnchor="middle"
+                transform={`rotate(90 ${dimX + u * 0.03} ${alto / 2})`}
+                style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
+              >
+                {fmt(alto, 1)} cm
+              </text>
+
+              {/* Etiqueta de desperdicio de ancho */}
+              {wasteWidth > 0.01 && (
+                <text
+                  x={cols * unitW + wasteWidth / 2}
+                  y={alto + marginBottom * 0.55}
+                  textAnchor="middle"
+                  fontSize={fs}
+                  fill="#FFD400"
+                  style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700 }}
+                >
+                  {fmt(wasteWidth, 1)} cm
+                </text>
+              )}
+            </svg>
+          ) : (
+            <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-[#6b6b78]">
+              La vista previa aparecerá aquí.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {hover && (
+        <div
+          className="pointer-events-none absolute z-10 rounded-xl border border-white/10 bg-[#0B0B11]/95 px-3 py-2 text-xs text-white shadow-2xl backdrop-blur"
+          style={{ left: hover.x, top: hover.y }}
+        >
+          <div className="flex items-center gap-1.5 font-semibold">
+            <span className="inline-block h-2 w-2 rounded-full" style={{ background: hover.p.idx < required ? "#FF2E93" : "#22E6FF" }} />
+            Pieza #{String(hover.idx + 1).padStart(2, "0")} · {hover.p.idx < required ? "Requerida" : "Excedente"}
+          </div>
+          <div className="mt-0.5 font-mono text-[#a3a3b2]">
+            {fmt(hover.p.w, 1)} × {fmt(hover.p.h, 1)} cm
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniSheet({ W, d, required }) {
+  if (!d.valid) {
+    return (
+      <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-white/10 text-[11px] text-[#6b6b78]">
+        No cabe
+      </div>
+    );
+  }
+  const maxPieces = 240;
+  const items = [];
+  outer: for (let r = 0; r < d.rows; r++) {
+    for (let c = 0; c < d.cols; c++) {
+      const idx = r * d.cols + c;
+      if (idx >= maxPieces) break outer;
+      items.push({ idx, x: c * d.unitW, y: r * d.unitH });
+    }
+  }
+  const pad = Math.max(W, d.alto) * 0.02;
+  return (
+    <div className="h-24 rounded-xl bg-[#06060A] p-2">
+      <svg viewBox={`${-pad} ${-pad} ${W + pad * 2} ${d.alto + pad * 2}`} className="h-full w-full">
+        <rect x={0} y={0} width={W} height={d.alto} fill="#14141c" />
+        {d.wasteWidth > 0.01 && (
+          <rect x={d.cols * d.unitW} y={0} width={d.wasteWidth} height={d.alto} fill="#FFD400" fillOpacity="0.25" />
+        )}
+        {items.map((p) => (
+          <rect
+            key={p.idx}
+            x={p.x + d.unitW * 0.04}
+            y={p.y + d.unitH * 0.04}
+            width={d.unitW * 0.92}
+            height={d.unitH * 0.92}
+            fill={p.idx < required ? "#FF2E93" : "rgba(34,230,255,0.35)"}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function ComparisonSection({ calc, onPick }) {
+  if (!calc.valid) return null;
+  const { horizontal: H_, vertical: V_ } = calc.compare;
+  const pieceArea = calc.pw * calc.ph;
+  const cards = [
+    { key: "horizontal", label: "Horizontal", icon: Wide, dims: `${fmt(calc.pw, 1)} × ${fmt(calc.ph, 1)}`, data: H_ },
+    { key: "vertical", label: "Vertical", icon: Tall, dims: `${fmt(calc.ph, 1)} × ${fmt(calc.pw, 1)}`, data: V_ },
+  ];
+  const savings = H_.valid && V_.valid ? Math.abs(H_.alto - V_.alto) : 0;
+
+  return (
+    <div className={CARD + " p-5"}>
+      <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#22E6FF]/12 text-[#22E6FF]">
+          <RotateCw className="h-4 w-4" />
+        </span>
+        Comparar orientaciones
+      </div>
+      <p className="mb-4 text-[11px] text-[#6f6f80]">Toca una tarjeta para usar esa orientación.</p>
+      <div className="grid grid-cols-2 gap-2.5">
+        {cards.map((c) => {
+          const isChosen = c.key === calc.key;
+          const d = c.data;
+          const aprov = d.valid && d.alto > 0 ? (100 * d.capacity * pieceArea) / (calc.W * d.alto) : 0;
+          const Icon = c.icon;
+          return (
+            <button
+              type="button"
+              key={c.key}
+              disabled={!d.valid}
+              onClick={() => onPick(c.key)}
+              className={
+                "group rounded-2xl border p-3 text-left transition-all " +
+                (isChosen
+                  ? "border-[#FF2E93]/60 bg-[#FF2E93]/[0.07] shadow-[0_0_30px_-12px_rgba(255,46,147,0.7)]"
+                  : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-60")
+              }
+            >
+              <div className="mb-2 flex items-center justify-between gap-1">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-white">
+                  <Icon className="h-3.5 w-3.5 text-[#a3a3b2]" /> {c.label}
+                </span>
+                {isChosen && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF2E93] text-black">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                )}
+              </div>
+              <MiniSheet W={calc.W} d={d} required={calc.required} />
+              {d.valid ? (
+                <div className="mt-2 space-y-0.5 font-mono text-[11px] text-[#a3a3b2]">
+                  <div className="flex justify-between"><span>Por fila</span><b className="text-white">{d.cols}</b></div>
+                  <div className="flex justify-between"><span>Alto</span><b className="text-white">{fmt(d.alto, 1)}</b></div>
+                  <div className="flex justify-between"><span>Aprov.</span><b className="text-white">{fmt(aprov, 1)}%</b></div>
+                </div>
+              ) : (
+                <div className="mt-2 font-mono text-[11px] text-[#6b6b78]">{c.dims} cm</div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {savings > 0.01 && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#22E6FF]/[0.07] px-3 py-2 text-[11px] text-[#9ff3ff]">
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-[#22E6FF]" />
+          <span>
+            La mejor orientación ahorra <b className="font-mono text-white">{fmt(savings, 1)} cm</b> de material.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function buildSummary(calc, categoryLabel, materialName) {
+  return [
+    "Calculadora de Optimización de Material",
+    `Material: ${categoryLabel} · ${materialName}`,
+    `Ancho de montaje: ${fmt(calc.W, 1)} cm`,
+    `Alto calculado: ${fmt(calc.alto, 1)} cm (${fmt(calc.alto / 100, 2)} m lineales)`,
+    `Área de material: ${fmt(calc.sheetArea / 10000, 2)} m²`,
+    `Pieza: ${fmt(calc.pw, 1)} x ${fmt(calc.ph, 1)} cm — orientación ${calc.key}`,
+    `Piezas por fila: ${calc.cols}   Filas: ${calc.rows}`,
+    `Requeridas: ${calc.required} uds   Producidas: ${calc.capacity} uds   Excedente: ${calc.surplus} uds`,
+    `Desperdicio -> Ancho: ${fmt(calc.wasteWidth, 1)} cm | Alto: ${fmt(calc.wasteHeight, 1)} cm`,
+    `Aprovechamiento: ${fmt(calc.aprovechamiento, 1)}%`,
+  ].join("\n");
+}
+
+/* ---------------------------------------------------------------------
+   APP
+--------------------------------------------------------------------- */
+
+function CuttingOptimizer() {
+  const [category, setCategory] = useState("solvente");
+  const [material, setMaterial] = useState("Vinilo");
+  const [sheetW, setSheetW] = useState("146.5");
+  const [customW, setCustomW] = useState(false);
+  const [pieceW, setPieceW] = useState("50");
+  const [pieceH, setPieceH] = useState("70");
+  const [required, setRequired] = useState("4");
+  const [mode, setMode] = useState("auto");
+  const [copied, setCopied] = useState(false);
+  const [swapSpin, setSwapSpin] = useState(0);
+
+  const calc = useCuttingCalculation({ sheetW, pieceW, pieceH, required, mode });
+  const numInvalid = (v) => v === "" || !isFinite(parseFloat(v)) || parseFloat(v) <= 0;
+
+  const currentCategoryData = MATERIALS_DATA[category] || MATERIALS_DATA.solvente;
+  const currentMaterialData =
+    currentCategoryData.materials.find((m) => m.name === material) || currentCategoryData.materials[0];
+  const catColor = CATEGORY_COLORS[category];
+
+  const handleCategoryChange = (catKey) => {
+    const catData = MATERIALS_DATA[catKey];
+    const firstMaterial = catData.materials[0];
+    setCategory(catKey);
+    setMaterial(firstMaterial.name);
+    setSheetW(String(firstMaterial.sizes[0].value));
+    setCustomW(false);
+  };
+
+  const handleMaterialChange = (matName) => {
+    const matData = currentCategoryData.materials.find((m) => m.name === matName) || currentCategoryData.materials[0];
+    setMaterial(matData.name);
+    setSheetW(String(matData.sizes[0].value));
+    setCustomW(false);
+  };
+
+  const handleSwap = () => {
+    setPieceW(pieceH);
+    setPieceH(pieceW);
+    setSwapSpin((s) => s + 180);
+  };
+
+  const handleReset = () => {
+    setCategory("solvente");
+    setMaterial("Vinilo");
+    setSheetW("146.5");
+    setCustomW(false);
+    setPieceW("50");
+    setPieceH("70");
+    setRequired("4");
+    setMode("auto");
+  };
+
+  const summary = calc.valid ? buildSummary(calc, currentCategoryData.label, currentMaterialData.name) : "";
+
+  const handleCopy = async () => {
+    if (!calc.valid) return;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(summary);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = summary;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (e) {
+      setCopied(false);
+    }
+  };
+
+  const handleWhatsApp = () => {
+    if (!calc.valid) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(summary)}`, "_blank", "noopener");
+  };
+
+  const activePreset = PIECE_PRESETS.find(
+    (p) =>
+      (String(p.w) === pieceW && String(p.h) === pieceH) || (String(p.h) === pieceW && String(p.w) === pieceH)
+  );
+
+  return (
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#05050A] pb-28 font-sans lg:pb-10">
+      {/* Fondo épico: auroras CMY + rejilla de puntos */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-[10%] -top-[15%] h-[55vh] w-[55vh] rounded-full bg-[#FF2E93]/25 blur-[120px]" style={{ animation: "floatA 18s ease-in-out infinite" }} />
+        <div className="absolute -right-[10%] top-[10%] h-[50vh] w-[50vh] rounded-full bg-[#22E6FF]/15 blur-[120px]" style={{ animation: "floatB 22s ease-in-out infinite" }} />
+        <div className="absolute bottom-[-20%] left-[30%] h-[45vh] w-[45vh] rounded-full bg-[#FFD400]/10 blur-[120px]" style={{ animation: "floatA 26s ease-in-out infinite reverse" }} />
+        <div className="dot-grid absolute inset-0" />
+      </div>
+
+      <div className="relative mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
+        {/* HEADER */}
+        <header className="fade-up mb-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative h-14 w-14 shrink-0">
+              <span className="absolute left-0 top-0 h-9 w-9 rounded-full bg-[#22E6FF] mix-blend-screen" />
+              <span className="absolute right-0 top-0 h-9 w-9 rounded-full bg-[#FF2E93] mix-blend-screen" />
+              <span className="absolute bottom-0 left-1/2 h-9 w-9 -translate-x-1/2 rounded-full bg-[#FFD400] mix-blend-screen" />
+            </div>
+            <div>
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.25em] text-[#6f6f80]">Taller de impresión<span className="hidden sm:inline"> · Corte inteligente</span></div>
+              <h1 className="font-display text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
+                Calculadora de <span className="text-shimmer">Optimización</span> de Material
+              </h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <div className="flex items-center gap-2 rounded-full border border-[#22E6FF]/25 bg-[#22E6FF]/[0.06] px-3.5 py-2 text-xs font-medium text-[#22E6FF] backdrop-blur">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22E6FF] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#22E6FF]" />
+              </span>
+              Cálculo en tiempo real
+            </div>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-[#c9c9d4] backdrop-blur transition-all hover:border-white/25 hover:text-white active:scale-95"
+            >
+              <RefreshCcw className="h-3.5 w-3.5" /> Reiniciar
+            </button>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* PANEL DE ENTRADA */}
+          <aside className="fade-up lg:col-span-5 xl:col-span-4" style={{ animationDelay: ".08s" }}>
+            <div className={CARD + " space-y-7 p-5 sm:p-6 lg:sticky lg:top-6"}>
+              {/* 1 · MATERIAL */}
+              <section>
+                <StepHeader n="1" title="Elige el material" hint="Tecnología, material y ancho del rollo" />
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(MATERIALS_DATA).map(([key, data]) => {
+                    const isActive = category === key;
+                    const colors = CATEGORY_COLORS[key];
+                    const Icon = colors.icon;
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        onClick={() => handleCategoryChange(key)}
+                        style={
+                          isActive
+                            ? { background: `linear-gradient(160deg, ${colors.bg}, ${colors.bg}cc)`, color: colors.text, borderColor: colors.bg, boxShadow: `0 10px 30px -10px ${colors.bg}` }
+                            : undefined
+                        }
+                        className={
+                          "flex flex-col items-center gap-1.5 rounded-2xl border px-1.5 py-3 text-center transition-all active:scale-95 " +
+                          (isActive ? "" : "border-white/[0.07] bg-white/[0.02] text-[#a3a3b2] hover:border-white/20 hover:text-white")
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-[11px] font-bold leading-tight sm:text-xs">{data.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3">
+                  <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">Material</span>
+                  <div className="relative">
+                    <Layers className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: catColor.bg }} />
+                    <select
+                      value={currentMaterialData.name}
+                      onChange={(e) => handleMaterialChange(e.target.value)}
+                      className="w-full cursor-pointer appearance-none rounded-2xl border border-white/[0.08] bg-[#07070C] py-3 pl-10 pr-10 text-sm font-semibold text-white outline-none transition-all hover:border-white/[0.16] focus:border-[#FF2E93] focus:shadow-[0_0_0_4px_rgba(255,46,147,0.14)]"
+                    >
+                      {currentCategoryData.materials.map((m) => (
+                        <option key={m.name} value={m.name}>{m.name}</option>
+                      ))}
+                    </select>
+                    <svg className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b78]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">Ancho del rollo</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {currentMaterialData.sizes.map((s) => (
+                      <Chip
+                        key={s.value}
+                        active={!customW && String(s.value) === sheetW}
+                        color={catColor.bg}
+                        textColor={catColor.text}
+                        onClick={() => {
+                          setCustomW(false);
+                          setSheetW(String(s.value));
+                        }}
+                      >
+                        {s.label}
+                      </Chip>
+                    ))}
+                    <Chip active={customW} color="#ffffff" textColor="#000" onClick={() => setCustomW(true)} title="Ancho personalizado">
+                      <span className="flex items-center gap-1"><Pencil className="h-3 w-3" /> Otro</span>
+                    </Chip>
+                  </div>
+                  {customW && (
+                    <div className="mt-2" style={{ animation: "popIn .3s ease-out both" }}>
+                      <NumberField unit="cm" value={sheetW} onChange={setSheetW} invalid={numInvalid(sheetW)} />
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* 2 · PIEZA */}
+              <section>
+                <StepHeader n="2" title="Medidas de la pieza" hint="Ancho × alto de cada impreso" />
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <NumberField label="Ancho" unit="cm" value={pieceW} onChange={setPieceW} invalid={numInvalid(pieceW)} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSwap}
+                    title="Intercambiar ancho y alto"
+                    aria-label="Intercambiar ancho y alto"
+                    className="mb-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-[#22E6FF] transition-all hover:border-[#22E6FF]/50 hover:bg-[#22E6FF]/10 active:scale-90"
+                  >
+                    <SwapIcon className="h-4 w-4 transition-transform duration-500" style={{ transform: `rotate(${swapSpin}deg)` }} />
+                  </button>
+                  <div className="flex-1">
+                    <NumberField label="Alto" unit="cm" value={pieceH} onChange={setPieceH} invalid={numInvalid(pieceH)} />
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {PIECE_PRESETS.map((p) => (
+                    <Chip
+                      key={p.label}
+                      active={activePreset === p}
+                      title={`${fmt(p.w, 1)} × ${fmt(p.h, 1)} cm`}
+                      onClick={() => {
+                        setPieceW(String(p.w));
+                        setPieceH(String(p.h));
+                      }}
+                    >
+                      {p.label}
+                    </Chip>
+                  ))}
+                </div>
+              </section>
+
+              {/* 3 · CANTIDAD */}
+              <section>
+                <StepHeader n="3" title="¿Cuántas necesitas?" hint="Cantidad de piezas requeridas" />
+                <NumberField
+                  value={required}
+                  onChange={setRequired}
+                  unit="uds"
+                  stepper
+                  big
+                  min={1}
+                  invalid={required !== "" && (!isFinite(parseFloat(required)) || parseFloat(required) <= 0)}
+                />
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {QTY_PRESETS.map((q) => (
+                    <Chip key={q} active={String(q) === required} onClick={() => setRequired(String(q))}>
+                      {q}
+                    </Chip>
+                  ))}
+                </div>
+              </section>
+
+              {/* 4 · ORIENTACIÓN */}
+              <section>
+                <StepHeader n="4" title="Orientación" hint="Automático elige la que menos material gasta" />
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "auto", label: "Automático", icon: Sparkles },
+                    { id: "horizontal", label: "Horizontal", icon: Wide },
+                    { id: "vertical", label: "Vertical", icon: Tall },
+                  ].map((opt) => {
+                    const Icon = opt.icon;
+                    const active = mode === opt.id;
+                    return (
+                      <button
+                        type="button"
+                        key={opt.id}
+                        onClick={() => setMode(opt.id)}
+                        className={
+                          "flex flex-col items-center gap-1.5 rounded-2xl border px-1.5 py-3 text-[11px] font-bold transition-all active:scale-95 sm:text-xs " +
+                          (active
+                            ? "border-[#FF2E93] bg-[#FF2E93] text-black shadow-[0_10px_30px_-10px_rgba(255,46,147,0.9)]"
+                            : "border-white/[0.07] bg-white/[0.02] text-[#a3a3b2] hover:border-white/20 hover:text-white")
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* Alto automático */}
+              <div className="flex items-center justify-between rounded-2xl border border-dashed border-[#FFD400]/25 bg-[#FFD400]/[0.04] px-4 py-3">
+                <div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c9a800]">
+                    Alto del montaje
+                    <span className="rounded-full bg-[#FFD400]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#FFD400]">AUTO</span>
+                  </div>
+                  <div className="text-[11px] text-[#7a7a8a]">Se calcula solo, ajustado exacto</div>
+                </div>
+                <div className="font-mono text-xl font-bold text-[#FFD400]">
+                  {calc.valid ? <><AnimatedNumber value={calc.alto} decimals={1} /> <span className="text-xs text-[#c9a800]">cm</span></> : "—"}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* RESULTADOS */}
+          <main className="flex flex-col gap-6 lg:col-span-7 xl:col-span-8">
+            <div className="fade-up" style={{ animationDelay: ".14s" }}>
+              <HeroResult calc={calc} materialName={`${currentCategoryData.label} · ${currentMaterialData.name}`} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+              <div className="fade-up xl:col-span-2" style={{ animationDelay: ".2s" }}>
+                <SheetVisualization calc={calc} />
+              </div>
+              <div className="fade-up flex flex-col gap-6" style={{ animationDelay: ".26s" }}>
+                <WasteCard calc={calc} />
+                <ComparisonSection calc={calc} onPick={setMode} />
+                <div className={CARD + " p-5"}>
+                  <div className="mb-3 text-sm font-semibold text-white">Compartir cotización</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      disabled={!calc.valid}
+                      className={
+                        "flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-sm font-bold transition-all active:scale-95 " +
+                        (calc.valid
+                          ? copied
+                            ? "bg-[#22E6FF] text-black"
+                            : "bg-gradient-to-r from-[#FF2E93] to-[#FF5AAE] text-black shadow-[0_10px_30px_-10px_rgba(255,46,147,0.9)] hover:brightness-110"
+                          : "cursor-not-allowed bg-white/[0.05] text-[#5b5b66]")
+                      }
+                    >
+                      {copied ? <Check className="h-4 w-4" strokeWidth={3} /> : <Clipboard className="h-4 w-4" />}
+                      {copied ? "¡Copiado!" : "Copiar"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleWhatsApp}
+                      disabled={!calc.valid}
+                      className={
+                        "flex items-center justify-center gap-2 rounded-2xl border px-3 py-3 text-sm font-bold transition-all active:scale-95 " +
+                        (calc.valid
+                          ? "border-[#25D366]/40 bg-[#25D366]/10 text-[#4ee68a] hover:bg-[#25D366]/20"
+                          : "cursor-not-allowed border-white/5 bg-white/[0.03] text-[#5b5b66]")
+                      }
+                    >
+                      <MessageCircle className="h-4 w-4" /> WhatsApp
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      {/* Barra fija de resultados en móvil */}
+      {calc.valid && (
+        <div className="fixed inset-x-3 bottom-3 z-40 lg:hidden">
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-[#0B0B11]/90 px-4 py-3 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+            <div>
+              <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">Piezas</div>
+              <div className="font-display text-xl font-bold text-white"><AnimatedNumber value={calc.capacity} /></div>
+            </div>
+            <div>
+              <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">Alto</div>
+              <div className="font-mono text-base font-bold text-[#FF2E93]">{fmt(calc.alto, 1)} <span className="text-[10px] text-[#6b6b78]">cm</span></div>
+            </div>
+            <div>
+              <div className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7a7a8a]">Aprov.</div>
+              <div className="font-mono text-base font-bold" style={{ color: rating(calc.aprovechamiento).color }}>{fmt(calc.aprovechamiento, 1)}%</div>
+            </div>
+            <button
+              type="button"
+              onClick={handleCopy}
+              aria-label="Copiar resumen"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF2E93] text-black active:scale-90"
+            >
+              {copied ? <Check className="h-4 w-4" strokeWidth={3} /> : <Clipboard className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const rootEl = document.getElementById("root");
+ReactDOM.createRoot(rootEl).render(<CuttingOptimizer />);
+</script>
+</body>
+</html>

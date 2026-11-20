@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BogoRuta | Comunidad Oficial de Ciclismo de Ruta</title>
+    <meta name="description" content="BogoRuta: comunidad oficial de ciclismo de ruta en Bogotá. Calculadora de relación y desarrollo, salón de la fama y grupo de WhatsApp.">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:title" content="BogoRuta | Comunidad Oficial de Ciclismo de Ruta">
+    <meta property="og:description" content="Velocidad, asfalto y kilómetros. Comunidad de ciclismo de ruta en Bogotá.">
+    <meta property="og:image" content="https://i.ibb.co/SX93CNBw/bogoruta-dos.png">
+
+    <!-- Favicon actualizado a BogoRuta (bogoruta-dos) -->
+    <link rel="icon" type="image/png" href="https://i.ibb.co/SX93CNBw/bogoruta-dos.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            yellow: '#FACC15',     // Amarillo principal (Rendimiento/Velocidad)
+                            gold: '#EAB308',       // Amarillo oscuro/dorado para gradientes
+                            light: '#FEF08A',      // Amarillo claro
+                            dark: '#000000',
+                            zinc850: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Compensa el header fijo al navegar con anclas (#calculadora, #reto-vol2) */
+        html { scroll-padding-top: 80px; }
+
+        body {
+            background-color: #000000; 
+            color: #F4F4F5; 
+            overflow-x: hidden; 
+        }
+
+        /* Animaciones Base */
+        @keyframes float { 
+            0% { transform: translateY(0px); } 
+            50% { transform: translateY(-12px); } 
+            100% { transform: translateY(0px); } 
+        }
+        .animate-float { animation: float 5s ease-in-out infinite; }
+
+        @keyframes glow { 
+            0% { opacity: 0.15; } 
+            50% { opacity: 0.4; } 
+            100% { opacity: 0.15; } 
+        }
+        .glow-effect { animation: glow 4s ease-in-out infinite; }
+
+        /* Animaciones de Entrada (Scroll) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Utilidades Visuales Adaptadas a BogoRuta (Tonos Amarillos) */
+        .text-glow-yellow {
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.6), 0 0 30px rgba(250, 204, 21, 0.3);
+        }
+        .glass-card { 
+            background: linear-gradient(145deg, rgba(39, 39, 42, 0.7) 0%, rgba(24, 24, 27, 0.9) 100%); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+        .glass-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 20px 40px -12px rgba(250, 204, 21, 0.15); /* Sombra amarilla */
+        }
+
+        /* Estilos Calculadora adaptados */
+        .number-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+        }
+
+        /* Personalización del input range - Ahora es Amarillo */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #FACC15; /* Color brand-yellow oficial */
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #27272a; /* bg-zinc-800 */
+            border-radius: 2px;
+        }
+        /* Firefox */
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border: 0;
+            border-radius: 50%;
+            background: #FACC15;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            background: #27272a;
+            border-radius: 2px;
+        }
+        input[type=range]:focus-visible { outline: 2px solid #FACC15; outline-offset: 6px; border-radius: 4px; }
+
+        /* Accesibilidad: sin animaciones si el usuario lo pide */
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .reveal { opacity: 1; transform: none; transition: none; }
+            .animate-float, .glow-effect { animation: none; }
+        }
+
+        /* Estilos Salón de la Fama Ruta */
+        .legacy-rank-1 { background: linear-gradient(90deg, rgba(250, 204, 21, 0.15) 0%, transparent 100%); border-left: 3px solid #FACC15; }
+        .legacy-rank-2 { background: linear-gradient(90deg, rgba(228, 228, 231, 0.08) 0%, transparent 100%); border-left: 3px solid #E4E4E7; }
+        .legacy-rank-3 { background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%); border-left: 3px solid #ffffff; }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-yellow selection:text-black">
+
+<!-- ============ BOGORUTA INTRO · INICIO (justo después de <body>) ============ -->
+<style id="bru-css">
+html.bru-lock{overflow:hidden}
+#bru{--p:#FACC15;--v:#EAB308;--l:#FEF08A;--f:#f4f4f5;--m:#8b8b93;position:fixed;inset:0;z-index:99999;background:#000;overflow:hidden;contain:layout paint;clip-path:inset(0);font-family:Inter,system-ui,Arial,sans-serif;color:var(--f)}
+#bru *{box-sizing:border-box;margin:0}
+#bru.gone{display:none}
+#bru::after{content:"";position:absolute;left:0;right:0;top:calc(50% - 1.5px);height:3px;background:linear-gradient(90deg,var(--p),var(--v));opacity:0;z-index:9}
+#bru.out{animation:bruOut .7s cubic-bezier(.7,0,.3,1) forwards}
+#bru.out::after{opacity:1}
+#bru.out #bru-in{opacity:0;transition:opacity .2s}
+@keyframes bruOut{0%{clip-path:inset(0)}80%{clip-path:inset(calc(50% - 1.5px) 0);opacity:1}100%{clip-path:inset(calc(50% - 1.5px) 0);opacity:0}}
+#bru-in{position:absolute;inset:0;background:linear-gradient(#000,#1d1604 38%,#000 38%)}
+#bru-bar{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,var(--p),var(--v));z-index:5}
+#bru.run #bru-bar{animation:bruBar 3.4s linear forwards}
+@keyframes bruBar{to{width:100%}}
+/* mundo: sol, cerros, ruta */
+#bru-world{position:absolute;inset:0;transition:opacity .5s}
+#bru:is(.s3,.s4) #bru-world{opacity:.4}
+#bru-sun{--w:min(62vmin,430px);position:absolute;left:50%;top:calc(38% - var(--w)*.55);width:var(--w);height:var(--w);margin-left:calc(var(--w)/-2);border-radius:50%;background:radial-gradient(circle,#fff8c4 0,var(--p) 35%,var(--v) 55%,rgba(234,179,8,.25) 66%,transparent 72%);opacity:0;transform:scale(.4);transition:opacity .8s,transform 1.6s cubic-bezier(.2,.8,.2,1)}
+#bru.run #bru-sun{opacity:1;transform:scale(1)}
+#bru:is(.s2,.s3,.s4) #bru-sun{transform:scale(1.3);transition:transform 1.6s ease-out}
+#bru-mt{position:absolute;left:0;right:0;top:calc(38% - min(14vh,110px));height:min(14vh,110px)}
+#bru-gd{position:absolute;left:0;right:0;bottom:0;height:62%}
+#bru-gd svg,#bru-mt svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+#bru-dash{position:absolute;left:0;right:0;top:0;height:62vh;overflow:hidden}
+#bru-dash i{position:absolute;left:50%;top:0;width:12px;height:80px;margin-left:-6px;border-radius:2px;background:var(--p);opacity:0;transform-origin:50% 0;will-change:transform}
+#bru.run:not(.s0) #bru-dash i{animation:bruDash .55s cubic-bezier(.55,0,.9,.5) infinite}
+@keyframes bruDash{0%{opacity:0;transform:translateY(0) scale(.03)}12%{opacity:1}100%{opacity:1;transform:translateY(62vh) scale(1.5)}}
+/* pelotón */
+#bru-pack{--w:min(78vw,380px);position:absolute;left:50%;bottom:5%;width:var(--w);height:calc(var(--w)*.95);margin-left:calc(var(--w)/-2);transform-origin:50% 100%;opacity:0}
+#bru-pack svg{position:absolute;width:22%;height:auto;overflow:visible}
+#bru.run:not(.s0) #bru-pack{animation:bruAway 1.5s cubic-bezier(.5,0,.75,.55) forwards}
+@keyframes bruAway{0%{opacity:1;transform:translateY(8vh) scale(1.15)}85%{opacity:1}100%{opacity:0;transform:translateY(-50vh) scale(.07)}}
+#bru .lg{animation:bruLeg .26s ease-in-out infinite alternate}#bru .lg.b{animation-direction:alternate-reverse}
+@keyframes bruLeg{from{transform:translateY(-7px)}to{transform:translateY(7px)}}
+/* líneas de velocidad */
+#bru-speed{position:absolute;inset:0;opacity:0;overflow:hidden;transition:opacity .2s}
+#bru-speed i{position:absolute;height:2px;right:-40%;background:linear-gradient(90deg,transparent,var(--l) 60%,transparent);animation:bruSt .3s linear infinite}
+@keyframes bruSt{to{transform:translateX(-340%)}}
+#bru:is(.s1,.s2) #bru-speed{opacity:.8}
+/* HUD */
+#bru-hud{position:absolute;left:max(18px,env(safe-area-inset-left,0px));top:max(18px,env(safe-area-inset-top,0px));font:700 11px/1.7 Inter,Arial,sans-serif;letter-spacing:.3em;color:var(--m);text-transform:uppercase;opacity:0;transition:opacity .3s}
+#bru-hud b{display:block;font:900 clamp(26px,7vw,44px)/1 Inter,Arial,sans-serif;letter-spacing:-.02em;color:var(--f)}
+#bru-hud i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--p);margin-right:8px;animation:bruRec .8s steps(2) infinite}
+@keyframes bruRec{50%{opacity:.2}}
+#bru:is(.s0,.s1,.s2) #bru-hud{opacity:1}
+/* destello, pulso, rayos */
+#bru-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 50% 38%,#fff,var(--p) 40%,transparent 75%)}
+#bru.s3 #bru-flash{animation:bruFl .5s ease-out}
+@keyframes bruFl{from{opacity:.95}to{opacity:0}}
+#bru-ring{position:absolute;left:50%;top:38%;width:50vmin;height:50vmin;margin:-25vmin 0 0 -25vmin;border-radius:50%;border:2px solid var(--p);opacity:0;pointer-events:none}
+#bru.s3 #bru-ring{animation:bruRing .9s ease-out forwards}
+@keyframes bruRing{0%{opacity:.9;transform:scale(.1)}100%{opacity:0;transform:scale(3.4)}}
+#bru-rays{position:absolute;left:50%;top:50%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;opacity:0;background:repeating-conic-gradient(rgba(250,204,21,.14) 0 3deg,transparent 3deg 12deg);-webkit-mask:radial-gradient(circle,#000,transparent 30%);mask:radial-gradient(circle,#000,transparent 30%)}
+#bru:is(.s3,.s4) #bru-rays{opacity:1;transition:opacity .4s;animation:bruSpin 24s linear infinite}
+@keyframes bruSpin{to{transform:rotate(360deg)}}
+/* logo */
+#bru-logo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 16px}
+#bru.s3 #bru-logo{animation:bruHit .3s .05s}
+@keyframes bruHit{20%{transform:translate(-8px,5px)}40%{transform:translate(7px,-6px)}60%{transform:translate(-4px,3px)}80%{transform:translate(2px,-1px)}}
+#bru-logo h2{font-weight:900;font-size:clamp(54px,17vw,170px);letter-spacing:-.045em;line-height:.88}
+#bru-logo h2 s{display:block;overflow:hidden;text-decoration:none;padding:.04em .06em}
+#bru-logo h2 s span{display:block;transform:translateY(112%)}
+#bru-logo h2 s+s span{background:linear-gradient(90deg,var(--l),var(--p) 45%,var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#bru:is(.s3,.s4) #bru-logo h2 s span{transform:none;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+#bru:is(.s3,.s4) #bru-logo h2 s+s span{transition-delay:.1s}
+#bru-sub{font:700 clamp(9px,2.2vw,13px) Inter,Arial,sans-serif;letter-spacing:.4em;color:var(--m);margin-top:20px;text-transform:uppercase;opacity:0}
+#bru-tag{font:900 clamp(14px,3.8vw,26px) Inter,Arial,sans-serif;margin-top:18px;opacity:0;transform:translateY(8px);background:linear-gradient(90deg,var(--l),var(--p),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#bru-chip{margin-top:22px;font:900 clamp(10px,2.4vw,13px) Inter,Arial,sans-serif;letter-spacing:.25em;background:var(--p);color:#000;border-radius:4px;padding:8px 14px;opacity:0;text-transform:uppercase;box-shadow:0 0 0 2px #000,0 0 0 4px var(--p)}
+#bru:is(.s3,.s4) #bru-sub{opacity:1;transition:opacity .3s .35s}
+#bru:is(.s3,.s4) #bru-tag{opacity:1;transform:none;transition:all .35s .5s}
+#bru:is(.s3,.s4) #bru-chip{opacity:1;transition:opacity .3s .65s}
+/* controles */
+#bru-ctl{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:6;display:flex;gap:4px}
+#bru-ctl button{font:700 11px Inter,Arial,sans-serif;letter-spacing:.25em;color:var(--m);background:none;border:0;cursor:pointer;padding:10px;touch-action:manipulation}
+#bru-ctl button:hover{color:#fff}
+#bru-ctl button.hint{color:var(--p);animation:bruHint 1.2s ease-in-out infinite}
+@keyframes bruHint{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){#bru{display:none}}
+html.bru-seen #bru{display:none} /* intro ya vista en esta sesión: no se pinta ni un instante */
+</style>
+<noscript><style>#bru{display:none}</style></noscript>
+<script>try{if(sessionStorage.getItem('bru_seen'))document.documentElement.classList.add('bru-seen')}catch(e){}</script>
+
+<div id="bru">
+ <div id="bru-in" aria-hidden="true">
+  <div id="bru-world">
+   <div id="bru-sun"></div>
+   <div id="bru-mt"><svg viewBox="0 0 100 14" preserveAspectRatio="none"><path fill="#0b0a07" d="M0 14V8l7-4 6 4 9-6 8 6 7-3 9 5 8-8 9 7 8-3 9 5 10-4V14z"/></svg></div>
+   <div id="bru-gd"><svg viewBox="0 0 100 62" preserveAspectRatio="none"><rect width="100" height="62" fill="#060606"/><polygon points="47.6,0 52.4,0 118,62 -18,62" fill="#16161a"/><path d="M47.6 0-18 62M52.4 0 118 62" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke" opacity=".55" fill="none"/></svg><div id="bru-dash"></div></div>
+  </div>
+  <div id="bru-speed"></div>
+  <div id="bru-pack"></div>
+  <div id="bru-hud"><i></i>En ruta · Bogotá<b id="bru-kmh">0 km/h</b></div>
+  <div id="bru-rays"></div><div id="bru-ring"></div>
+  <div id="bru-logo"><h2><s><span>BOGO</span></s><s><span>RUTA</span></s></h2><div id="bru-sub">Comunidad oficial de ciclismo de ruta · Bogotá</div><div id="bru-tag"></div><div id="bru-chip">KM 0 · Velocidad y asfalto</div></div>
+  <div id="bru-flash"></div>
+ </div>
+ <div id="bru-bar"></div>
+ <div id="bru-ctl"><button id="bru-snd" type="button">SONIDO OFF</button><button id="bru-skip" type="button">SALTAR ›</button></div>
+</div>
+
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)},intro=$('bru'),root=document.documentElement,
+  TAGS=['VELOCIDAD, ASFALTO Y KILÓMETROS.','DEVORANDO KILÓMETROS.','ELEGANCIA Y RESISTENCIA.','DOS RUEDAS. UN SOLO RITMO.'],
+  timers=[],done=true,raf=0,ac=null,cur=0,wantSound=true,mst=null,nb=null;
+
+  // pelotón visto desde atrás (líder con maillot amarillo)
+  var R='<svg viewBox="0 0 60 104" style="left:@L@%;bottom:@B@%;transform:scale(@S@);--jc:@C@"><ellipse cx="30" cy="90" rx="4.5" ry="14" fill="none" stroke="#a1a1aa" stroke-width="3"/><rect class="lg a" x="21" y="58" width="8" height="30" rx="3.5" fill="#18181b" stroke="#52525b"/><rect class="lg b" x="31" y="58" width="8" height="30" rx="3.5" fill="#18181b" stroke="#52525b"/><path d="M19 32q11-5 22 0l-4 28H23z" fill="var(--jc)"/><path d="M23 46h14" stroke="#FACC15" stroke-width="3"/><path d="M20 35 13 54M40 35l7 19" stroke="var(--jc)" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M9 54h8M43 54h8" stroke="#a1a1aa" stroke-width="3" stroke-linecap="round"/><circle cx="30" cy="22" r="8" fill="#e4e4e7"/><path d="M21 21a9 9 0 0 1 18 0q-9-4-18 0z" fill="#FACC15"/></svg>';
+  [[39,50,.8,'#FACC15'],[20,27,.92,'#3f3f46'],[58,27,.92,'#3f3f46'],[2,2,1,'#52525b'],[76,2,1,'#52525b']].forEach(function(r){
+    $('bru-pack').insertAdjacentHTML('beforeend',R.replace('@L@',r[0]).replace('@B@',r[1]).replace('@S@',r[2]).replace('@C@',r[3]))});
+  // marcas de la ruta y líneas de velocidad
+  var dh='';for(var i=0;i<7;i++)dh+='<i style="animation-delay:-'+(i*.55/7).toFixed(3)+'s"></i>';$('bru-dash').innerHTML=dh;
+  var sp=$('bru-speed');for(var i=0,N=innerWidth<600?8:14;i<N;i++){var l=document.createElement('i');l.style.cssText='top:'+(8+Math.random()*84)+'%;width:'+(20+Math.random()*40)+'%;animation-delay:'+(Math.random()*.3)+'s;opacity:'+(.25+Math.random()*.6);sp.appendChild(l)}
+
+  function pickTag(){var n=0;try{n=+localStorage.getItem('bru_n')||0;localStorage.setItem('bru_n',n+1)}catch(e){n=Math.floor(Math.random()*4)}return TAGS[n%TAGS.length]}
+  function whenLoaded(fn){if(document.readyState==='complete')fn();else addEventListener('load',fn,{once:true})}
+  function at(ms,fn){timers.push(setTimeout(fn,ms))}
+  function st(n){cur=n;intro.className='run s'+n}
+
+  // sonido 100 % sintetizado (Web Audio, 0 KB). Si el navegador bloquea el autoplay, corre en silencio
+  // y el sonido se activa con el primer toque o tecla, sin errores.
+  function canAuto(){try{if(navigator.getAutoplayPolicy)return navigator.getAutoplayPolicy('audiocontext')!=='disallowed'}catch(e){}return true}
+  function initAudio(){
+    if(ac){if(ac.state==='suspended')ac.resume();return ac}
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+    try{ac=new AC()}catch(e){return null}
+    ac.onstatechange=label;
+    var comp=ac.createDynamicsCompressor(),dl=ac.createDelay(),fb=ac.createGain(),wet=ac.createGain();
+    mst=ac.createGain();mst.gain.value=wantSound?.9:0;dl.delayTime.value=.15;fb.gain.value=.32;wet.gain.value=.22;
+    mst.connect(comp);comp.connect(ac.destination);mst.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(comp);
+    nb=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);var d=nb.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    return ac;
+  }
+  function osc(dt,type,f0,f1,dur,vol){
+    if(!ac||ac.state!=='running')return;
+    var o=ac.createOscillator(),g=ac.createGain(),a=ac.currentTime+dt;
+    o.type=type;o.frequency.setValueAtTime(f0,a);o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),a+dur);
+    g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(vol,a+.008);g.gain.exponentialRampToValueAtTime(.0001,a+dur);
+    o.connect(g);g.connect(mst);o.start(a);o.stop(a+dur+.05);
+  }
+  function noise(dt,type,f0,f1,dur,vol,atk){
+    if(!ac||ac.state!=='running')return;
+    var n=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain(),a=ac.currentTime+dt;
+    n.buffer=nb;n.loop=true;fl.type=type;fl.Q.value=1.2;
+    fl.frequency.setValueAtTime(f0,a);fl.frequency.exponentialRampToValueAtTime(f1,a+dur);
+    g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(vol,a+(atk||.01));g.gain.exponentialRampToValueAtTime(.0001,a+dur);
+    n.connect(fl);fl.connect(g);g.connect(mst);n.start(a);n.stop(a+dur+.05);
+  }
+  var fx={
+    start:function(){osc(0,'sine',110,42,.5,.5);osc(.22,'sine',110,42,.5,.4)},                              // latido: salida
+    ride:function(){for(var k=0,t=0;k<10;k++){noise(t,'highpass',3500,2000,.03,.3);t+=.08-k*.004}         // piñón libre
+      noise(0,'bandpass',150,2500,1.1,.3,.8);osc(0,'sawtooth',70,320,1.1,.05)},                            // el pelotón acelera
+    pass:function(){noise(0,'bandpass',400,4200,.75,.55,.3);osc(0,'sawtooth',120,900,.75,.06);noise(.1,'highpass',6000,2500,.5,.12,.2)}, // pasa el pelotón
+    hit:function(){osc(0,'sine',120,32,1,.9);noise(0,'lowpass',6000,300,.6,.5);noise(0,'highpass',6000,3000,1.2,.2,.03); // BOGORUTA
+      [110,165,220,277.2,330].forEach(function(f){osc(0,'sawtooth',f,f*.997,1.4,.045)});osc(.15,'sine',1318.5,1318.5,.9,.06);osc(.3,'sine',1760,1760,1,.05)},
+    out:function(){noise(0,'bandpass',5000,200,.5,.4,.3);osc(0,'sine',600,70,.5,.25)}
+  };
+  var stageFx=[null,fx.ride,fx.pass,fx.hit,null];
+  function label(){var b=$('bru-snd');
+    if(!wantSound){b.textContent='SONIDO OFF';b.className=''}
+    else if(ac&&ac.state==='running'){b.textContent='SONIDO ON';b.className=''}
+    else{b.textContent='TOCA PARA SONIDO';b.className='hint'}}
+  function level(v){if(ac&&mst)mst.gain.setTargetAtTime(v,ac.currentTime,.03)}
+  function unlock(){ // llamado desde un gesto del usuario (Safari/iOS y Chrome lo exigen)
+    if(done||!wantSound||(!ac&&!initAudio()))return; // tras la intro, los clics de la página no tocan el audio
+    if(ac.state!=='running')ac.resume().then(function(){label();if(!done&&stageFx[cur])stageFx[cur]()},function(){});
+  }
+  $('bru-snd').onclick=function(){
+    if(wantSound&&(!ac||ac.state!=='running')){unlock();return}
+    wantSound=!wantSound;if(wantSound)unlock();level(wantSound?.9:0);label();
+  };
+
+  function kmh(t0){ // velocímetro 0 → 52 km/h mientras sale el pelotón
+    cancelAnimationFrame(raf);
+    (function f(now){var p=Math.min(1,(now-t0)/1300);$('bru-kmh').textContent=Math.round(52*(1-Math.pow(1-p,2)))+' km/h';if(p<1)raf=requestAnimationFrame(f)})(performance.now());
+  }
+
+  function finish(){
+    if(done)return;done=true;timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf);
+    intro.classList.add('out');
+    setTimeout(function(){intro.classList.add('gone');root.classList.remove('bru-lock');
+      document.dispatchEvent(new Event('bogoruta:intro-end'))},720);
+    // libera el AudioContext cuando termina el último sonido
+    setTimeout(function(){if(ac&&ac.state!=='closed'&&ac.close)ac.close().catch(function(){})},1600);
+  }
+
+  function play(){
+    timers.forEach(clearTimeout);timers=[];done=false;level(wantSound?.9:0);
+    root.classList.add('bru-lock');
+    $('bru-tag').textContent=pickTag();$('bru-kmh').textContent='0 km/h';
+    intro.className='';void intro.offsetWidth;
+    st(0);fx.start();                                            // 0 s: amanece, latido de salida
+    at(450,function(){st(1);kmh(performance.now());fx.ride()});  // la ruta corre, sale el pelotón
+    at(1100,function(){st(2);fx.pass()});                        // pasa rozando hacia el sol
+    at(1900,function(){st(3);fx.hit()});                         // BOGORUTA
+    at(3300,function(){st(4);whenLoaded(function(){if(done)return;fx.out();finish()})}); // cierre cuando la página esté lista
+    at(6200,finish);                                             // tope: nunca más de ~6 s
+  }
+
+  function skipIt(){level(0);finish()}
+  $('bru-skip').onclick=skipIt;
+  addEventListener('keydown',function(e){if(e.key==='Escape')skipIt()});
+
+  function start(){
+    if(canAuto())initAudio();                                    // evita avisos de autoplay en consola
+    if(ac&&ac.state!=='running')ac.resume().then(label,function(){});
+    ['pointerdown','touchend','click','keydown'].forEach(function(n){addEventListener(n,function(e){
+      if(e.target&&e.target.closest&&e.target.closest('#bru-snd'))return;unlock()},{capture:true,passive:true})});
+    label();play();
+  }
+  // la intro sale solo la primera vez en la sesión del navegador; F5 / recargar no la repite.
+  // La marca se guarda ANTES de arrancar, así que recargar a mitad de la animación tampoco la repite.
+  var seen=false;try{seen=!!sessionStorage.getItem('bru_seen')}catch(e){}
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||seen){intro.classList.add('gone')}
+  else{try{sessionStorage.setItem('bru_seen','1')}catch(e){}start()}
+})();
+</script>
+<!-- ============ BOGORUTA INTRO · FIN ============ -->
+
+    <header class="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5 transition-all duration-300">
+        <nav class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <!-- Logo principal BogoRuta -->
+                <img src="https://i.ibb.co/35758jf5/bogoruta.png" alt="Logo BogoRuta" class="h-10 w-auto drop-shadow-lg object-contain">
+                <div>
+                    <span class="font-black tracking-tighter text-lg leading-none block bg-gradient-to-r from-brand-yellow to-white bg-clip-text text-transparent">BOGORUTA</span>
+                    <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest block">Ciclismo de Ruta</span>
+                </div>
+            </div>
+            
+            <!-- Navegación simplificada -->
+            <div class="space-x-8 font-bold text-xs uppercase tracking-widest hidden md:block">
+                <a href="#calculadora" class="text-zinc-400 hover:text-brand-yellow transition-colors">Calculadora</a>
+                <a href="#reto-vol2" class="text-zinc-400 hover:text-white transition-colors">Salón de la Fama</a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <a href="https://www.instagram.com/bogoruta/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de BogoRuta" class="text-white hover:text-brand-yellow transition-colors md:ml-4 group">
+                    <i class="fa-brands fa-instagram text-xl group-hover:scale-110 transition-transform"></i>
+                </a>
+                <a href="https://web.facebook.com/profile.php?id=100064607293899" target="_blank" rel="noopener noreferrer" aria-label="Facebook de BogoRuta" class="text-white hover:text-brand-yellow transition-colors group">
+                    <i class="fa-brands fa-facebook text-xl group-hover:scale-110 transition-transform"></i>
+                </a>
+                <button id="menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu" class="md:hidden text-white hover:text-brand-yellow w-8 h-8 flex items-center justify-center">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Menú móvil -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-black/95 backdrop-blur-md">
+            <div class="px-6 py-4 flex flex-col gap-1 font-bold text-xs uppercase tracking-widest">
+                <a href="#calculadora" class="py-3 text-zinc-300 hover:text-brand-yellow transition-colors">Calculadora</a>
+                <a href="#reto-vol2" class="py-3 text-zinc-300 hover:text-brand-yellow transition-colors">Salón de la Fama</a>
+                <a href="https://chat.whatsapp.com/KHFufDawbr03tU3M0pg13H" target="_blank" rel="noopener noreferrer" class="py-3 text-[#25D366] hover:brightness-110 transition-colors">
+                    <i class="fa-brands fa-whatsapp mr-2"></i>Grupo WhatsApp
+                </a>
+                <a href="https://web.facebook.com/profile.php?id=100064607293899" target="_blank" rel="noopener noreferrer" class="py-3 text-zinc-300 hover:text-brand-yellow transition-colors">
+                    <i class="fa-brands fa-facebook mr-2"></i>Facebook
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-20 relative overflow-hidden">
+            <!-- Background Glows adaptados a Amarillo -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-yellow/10 blur-[120px] rounded-full pointer-events-none"></div>
+            
+            <div class="relative group mb-6 reveal">
+                <div class="absolute -inset-8 bg-gradient-to-r from-brand-yellow to-brand-gold rounded-full blur-3xl glow-effect opacity-30"></div>
+                <!-- Símbolo o Logo Principal Central (bogoruta-dos) -->
+                <img src="https://i.ibb.co/SX93CNBw/bogoruta-dos.png" alt="Símbolo BogoRuta" class="relative w-28 md:w-36 h-auto animate-float drop-shadow-2xl">
+            </div>
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-black mb-5 leading-none tracking-tighter reveal" style="transition-delay: 100ms;">
+                BOGO<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow to-brand-gold text-glow-yellow">RUTA</span>
+            </h1>
+            <p class="text-sm md:text-base text-zinc-400 mb-8 max-w-lg reveal" style="transition-delay: 200ms;">
+                Comunidad oficial de ciclismo de ruta en Bogotá. Velocidad, asfalto y devorando kilómetros con elegancia y resistencia sobre dos ruedas.
+            </p>
+
+            <!-- Familia BOGO (Reordenada para priorizar BogoRuta) -->
+            <div class="reveal w-full max-w-3xl mx-auto flex flex-col items-center gap-5 mb-8" style="transition-delay: 250ms;">
+                <div class="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+                    <!-- BogoRuta (Destacado Principal) -->
+                    <a href="https://www.instagram.com/bogoruta/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all scale-110">
+                        <img src="https://i.ibb.co/35758jf5/bogoruta.png" alt="Bogo Ruta" class="h-8 md:h-10 w-auto object-contain opacity-100 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)] transition-all" />
+                    </a>
+                    <!-- Otros de la familia -->
+                    <a href="https://bogomtb.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+                        <img src="https://i.ibb.co/Q3FqNsjH/bogo-MTB.png" alt="Bogo MTB" class="h-8 md:h-10 w-auto object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
+                    </a>
+                    <a href="https://bogochicas.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+                        <img src="https://i.ibb.co/qLYvYCrT/Logotipos-Eventos.png" alt="Bogochicas" class="h-8 md:h-10 w-auto object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
+                    </a>
+                    <a href="https://bogofija.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+                        <img src="https://i.ibb.co/99R1NsRX/Logo-Bogofija-2021.png" alt="Bogofija" class="h-8 md:h-10 w-auto object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                    </a>
+                </div>
+
+                <!-- Grupo WhatsApp BogoRuta -->
+                <div>
+                    <a href="https://chat.whatsapp.com/KHFufDawbr03tU3M0pg13H"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2.5 px-6 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-black font-extrabold text-sm rounded-full transition-all transform hover:scale-105 shadow-lg shadow-[#25D366]/20">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>Grupo WhatsApp BogoRuta</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="#calculadora" class="reveal bg-gradient-to-r from-brand-yellow to-brand-gold text-black font-black px-7 py-3 rounded-full uppercase hover:brightness-110 transition-all transform hover:scale-105 active:scale-95 text-sm md:text-base shadow-[0_0_20px_rgba(250,204,21,0.4)]" style="transition-delay: 350ms;">
+                Herramientas
+            </a>
+        </section>
+
+        <section id="calculadora" class="py-24 px-6 border-t border-zinc-900 bg-[#09090b] relative z-10 text-white">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-4 mb-16 reveal">
+                    <div class="inline-flex items-center px-4 py-1.5 mb-2 rounded-full bg-zinc-900 border border-brand-yellow/30 text-xs font-bold uppercase tracking-widest text-brand-yellow">
+                        <i class="fa-solid fa-calculator mr-2"></i> Herramienta BogoRuta
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter">Calculadora de <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow to-brand-gold text-glow-yellow">Rendimiento</span></h2>
+                    <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+                        Ajusta la relación de transmisión de tu bicicleta de ruta. Optimiza tu cadencia para rodar en pelotón, sprints en plano o escalar en asfalto con la máxima eficiencia.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Panel de controles -->
+                    <div class="lg:col-span-5 glass-card p-8 rounded-3xl relative overflow-hidden reveal">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand-yellow/10 blur-2xl rounded-bl-full pointer-events-none"></div>
+
+                        <div class="space-y-8 relative z-10">
+                            <div class="space-y-3">
+                                <label for="port-selector" class="text-xs font-bold uppercase tracking-wider text-brand-yellow flex items-center">
+                                    <i class="fa-solid fa-map-location-dot mr-2"></i> 1. Selecciona tu Ruta
+                                </label>
+                                <div class="relative">
+                                    <select id="port-selector" onchange="updateCalculator()" class="w-full bg-zinc-900 border border-zinc-800 text-white text-sm rounded-xl focus:ring-brand-yellow focus:border-brand-yellow block p-4 appearance-none cursor-pointer outline-none transition-all">
+                                        <option value="none">Ruta Libre (Sin puerto específico)</option>
+                                        <optgroup label="Cundinamarca">
+                                            <option value="patios">Patios (14 KM - Asfalto)</option>
+                                            <option value="lavega">Alto del Vino (30 KM - Asfalto)</option>
+                                            <option value="cuchilla">La Cuchilla (11 KM - Asfalto)</option>
+                                        </optgroup>
+                                        <optgroup label="Fuera de Cundinamarca">
+                                            <option value="letras">Alto de Letras (81 KM)</option>
+                                        </optgroup>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-brand-yellow">
+                                        <i class="fa-solid fa-chevron-down text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6 pt-6 border-t border-zinc-800/50">
+                                <label class="text-xs font-bold uppercase tracking-wider text-brand-yellow flex items-center">
+                                    <i class="fa-solid fa-gear mr-2"></i> 2. Configura tu Bici (Ruta)
+                                </label>
+                                
+                                <div class="space-y-3 bg-black/40 p-5 rounded-2xl border border-zinc-800/50">
+                                    <div class="flex justify-between items-end">
+                                        <label for="chainring" class="text-sm font-semibold text-zinc-300">Plato delantero</label>
+                                        <span id="chainring-val" class="text-3xl font-black text-white number-transition tracking-tighter">50T</span>
+                                    </div>
+                                    <input type="range" id="chainring" min="34" max="55" value="50" class="w-full" oninput="updateCalculator()">
+                                </div>
+
+                                <div class="space-y-3 bg-black/40 p-5 rounded-2xl border border-zinc-800/50">
+                                    <div class="flex justify-between items-end">
+                                        <label for="cog" class="text-sm font-semibold text-zinc-300">Piñón trasero (Pacha)</label>
+                                        <span id="cog-val" class="text-3xl font-black text-white number-transition tracking-tighter">11T</span>
+                                    </div>
+                                    <input type="range" id="cog" min="10" max="34" value="11" class="w-full" oninput="updateCalculator()">
+                                </div>
+                            </div>
+                            
+                            <!-- Botones conservados para compatibilidad de interfaz -->
+                            <div class="space-y-3 pt-6 border-t border-zinc-800/50">
+                                <p class="text-xs font-bold uppercase tracking-wider text-brand-yellow flex items-center">
+                                    <i class="fa-solid fa-shoe-prints mr-2"></i> 3. Estilo de Frenado (Análisis Base)
+                                </p>
+                                <div class="flex bg-black rounded-xl p-1.5 border border-zinc-800">
+                                    <button type="button" id="btn-single-skid" onclick="setAmbiMode(false)" class="flex-1 py-2.5 text-xs font-bold uppercase rounded-lg bg-zinc-800 text-white shadow transition-all">Un Pie</button>
+                                    <button type="button" id="btn-ambi-skid" onclick="setAmbiMode(true)" class="flex-1 py-2.5 text-xs font-bold uppercase rounded-lg text-zinc-500 hover:text-white transition-all bg-transparent">Ambidextro</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de resultados -->
+                    <div class="lg:col-span-7 flex flex-col gap-6 reveal" style="transition-delay: 200ms;">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div class="glass-card p-6 rounded-3xl flex flex-col justify-between transition-all group">
+                                <span class="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-line text-brand-yellow group-hover:scale-110 transition-transform"></i> Dureza de Relación
+                                </span>
+                                <div class="mt-4 flex items-end gap-2">
+                                    <span id="res-ratio" class="text-6xl font-black text-brand-yellow number-transition tracking-tighter">4.54</span>
+                                </div>
+                                <div class="mt-4 h-1.5 w-full bg-black rounded-full overflow-hidden">
+                                    <div id="ratio-bar" class="h-full bg-gradient-to-r from-brand-yellow to-white transition-all duration-500" style="width: 80%"></div>
+                                </div>
+                                <p id="ratio-feedback" class="text-xs text-zinc-400 mt-3 font-medium">Relación para velocidad punta.</p>
+                            </div>
+
+                            <div class="glass-card p-6 rounded-3xl flex flex-col justify-between transition-all group">
+                                <span class="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-ruler-horizontal text-white group-hover:scale-110 transition-transform"></i> Avance por Pedalada
+                                </span>
+                                <div class="mt-4 flex items-end gap-2">
+                                    <span id="res-dev" class="text-6xl font-black text-white number-transition tracking-tighter">9.53</span>
+                                    <span class="text-sm text-zinc-500 mb-2 font-mono font-bold">m</span>
+                                </div>
+                                <p class="text-xs text-zinc-400 mt-auto pt-4 font-medium">Metros avanzados por revolución (Llanta 700x25c).</p>
+                            </div>
+                        </div>
+
+                        <!-- Skid Patches adaptado visualmente -->
+                        <div class="glass-card p-6 sm:p-8 rounded-3xl flex-1 flex flex-col sm:flex-row items-center gap-8 transition overflow-hidden relative border border-brand-yellow/20 bg-brand-yellow/5">
+                            <div class="flex-1 space-y-2 z-10 w-full text-center sm:text-left">
+                                <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-black rounded border border-zinc-800 mb-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-yellow animate-pulse"></span>
+                                    <span class="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">Análisis de Llanta</span>
+                                </div>
+                                <h4 class="text-3xl font-black uppercase tracking-tight">Puntos de Desgaste: <span id="res-skids" class="text-brand-yellow number-transition">11</span></h4>
+                                <p class="text-sm text-zinc-400 leading-relaxed max-w-sm mx-auto sm:mx-0">
+                                    Puntos teóricos donde la llanta sufriría mayor desgaste al derrapar o aplicar fuerza máxima. <br>
+                                    <span id="skid-warning" class="text-white font-bold mt-1 block">Excelente distribución.</span>
+                                </p>
+                            </div>
+                            
+                            <div class="relative w-40 h-40 flex-shrink-0 z-10 mx-auto">
+                                <svg class="absolute inset-0 w-full h-full transform -rotate-90 drop-shadow-[0_0_12px_rgba(250,204,21,0.3)]" id="skid-diagram-svg"></svg>
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                    <i class="fa-solid fa-bicycle text-2xl text-zinc-800 opacity-60"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recomendación de Puerto Dinámica -->
+                        <div id="port-recommendation" aria-live="polite" class="hidden bg-yellow-500/10 border border-yellow-500/30 p-5 rounded-2xl items-start gap-4 transition-all">
+                            <div class="bg-brand-yellow p-2.5 rounded-xl text-black shadow-lg shadow-yellow-500/20">
+                                <i class="fa-solid fa-lightbulb text-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-black text-white uppercase tracking-wide" id="rec-title">Tips de Ruta</h5>
+                                <p class="text-sm text-zinc-300 mt-1 leading-relaxed" id="rec-text">Selecciona una ruta para ver consejos adaptados.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reto-vol2" class="py-24 px-4 sm:px-6 lg:px-8 bg-[#000000] relative border-t border-zinc-900 min-h-screen flex items-center">
+            <!-- Detalles de fondo -->
+            <div class="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+
+            <div class="max-w-4xl mx-auto relative z-10 w-full">
+                <div class="text-center mb-16 reveal">
+                    <div class="inline-flex items-center px-4 py-1 rounded-full bg-zinc-900 border border-brand-yellow/30 text-[10px] font-bold uppercase tracking-widest text-brand-yellow mb-4 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
+                        <i class="fa-solid fa-trophy mr-2"></i> Salón de la Fama
+                    </div>
+                    <h2 class="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tighter text-white">
+                        Resultados Históricos <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-yellow to-brand-light text-glow-yellow">RUTA 2025</span>
+                    </h2>
+                    <p class="text-zinc-400 text-sm max-w-xl mx-auto font-medium leading-relaxed">
+                        Honor a los y las ciclistas que dominaron el asfalto en nuestra edición pasada. Velocidad, resistencia y pura pasión.
+                    </p>
+                </div>
+
+                <div class="relative reveal" style="transition-delay: 100ms;">
+                    <!-- Contenedor único para la categoría Ruta Libre (centrado) -->
+                    <div id="col-ruta" class="max-w-xl mx-auto"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 px-6 bg-gradient-to-r from-brand-yellow to-brand-gold text-black text-center relative z-10 overflow-hidden">
+            <div class="relative z-10 reveal">
+                <h2 class="text-4xl md:text-6xl font-black mb-6 uppercase tracking-tighter drop-shadow-lg">Únete al Pelotón</h2>
+                <p class="text-lg font-medium mb-10 max-w-xl mx-auto opacity-90 drop-shadow-sm font-semibold">Conéctate con más ciclistas apasionados, entérate de nuestros entrenamientos y próximos eventos de ruta.</p>
+                <a href="https://www.instagram.com/bogoruta/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 bg-black text-white px-8 py-4 rounded-full font-black text-lg hover:bg-zinc-800 transition-all transform hover:scale-105 hover:-translate-y-1 shadow-2xl">
+                    <i class="fa-brands fa-instagram text-2xl text-brand-yellow"></i> @BOGORUTA
+                </a>
+            </div>
+            <!-- Decals bg -->
+            <i class="fa-solid fa-road absolute -left-10 -bottom-10 text-[250px] text-black/10 -rotate-12 pointer-events-none"></i>
+        </section>
+
+    </main>
+
+    <footer class="py-12 px-6 bg-black border-t border-zinc-900 text-center relative z-10">
+        
+        <div class="flex justify-center mb-8">
+             <img src="https://i.ibb.co/35758jf5/bogoruta.png" alt="Logo BogoRuta" loading="lazy" class="h-14 w-auto object-contain opacity-80">
+        </div>
+        
+        <!-- Ubicación y Correo -->
+        <p class="text-zinc-500 text-sm mb-2 font-medium">Bogotá, Colombia</p>
+        <a href="mailto:bogopublica@gmail.com" class="text-zinc-300 hover:text-brand-yellow font-bold block mb-8 transition-colors">bogopublica@gmail.com</a>
+        
+        <!-- REDES SOCIALES -->
+        <div class="flex justify-center items-center gap-6 mb-3">
+            <a href="https://www.instagram.com/bogoruta/" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-yellow text-xl transition-colors" aria-label="Instagram @bogoruta">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://web.facebook.com/profile.php?id=100064607293899" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-yellow text-xl transition-colors" aria-label="Facebook">
+                <i class="fa-brands fa-facebook"></i>
+            </a>
+            <a href="https://www.tiktok.com/@bogofija" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-yellow text-xl transition-colors" aria-label="TikTok">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+            <a href="https://www.strava.com/clubs/bogofija" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-yellow text-xl transition-colors" aria-label="Strava">
+                <i class="fa-brands fa-strava"></i>
+            </a>
+        </div>
+        <a href="https://www.instagram.com/bogoruta/" target="_blank" rel="noopener noreferrer" class="inline-block text-zinc-400 hover:text-brand-yellow text-sm font-bold mb-8 transition-colors">@bogoruta</a>
+        
+        <!-- Copyright -->
+        <p class="text-zinc-500 text-xs font-semibold tracking-wide">&copy;2026 BOGOFIJA · Todos los derechos reservados.</p>
+        <p class="text-zinc-500 text-xs mt-2">
+            Diseñado y desarrollado por
+            <a href="https://sneyder.netlify.app" target="_blank" rel="noopener noreferrer" class="font-bold text-[#E65C13] hover:underline underline-offset-2">Art Sneyder</a>
+            · 2022
+        </p>
+    </footer>
+
+    <script>
+        // --- 1. ANIMACIONES SCROLL ---
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Las animaciones del hero arrancan cuando termina la intro (si no, ocurren ocultas detrás de ella)
+            const startReveal = () => document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+            const intro = document.getElementById('bru');
+            if (intro && !intro.classList.contains('gone')) {
+                document.addEventListener('bogoruta:intro-end', startReveal, { once: true });
+            } else {
+                startReveal();
+            }
+
+            // Inicializar vistas
+            updateCalculator();
+            renderSalonFamaRuta();
+            initMobileMenu();
+        });
+
+        // --- MENÚ MÓVIL ---
+        function initMobileMenu() {
+            const btn = document.getElementById('menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            if (!btn || !menu) return;
+            const icon = btn.querySelector('i');
+
+            const setOpen = (open) => {
+                menu.classList.toggle('hidden', !open);
+                btn.setAttribute('aria-expanded', String(open));
+                btn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+                icon.className = open ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-bars text-xl';
+            };
+
+            btn.addEventListener('click', () => setOpen(menu.classList.contains('hidden')));
+            menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+            window.addEventListener('resize', () => { if (window.innerWidth >= 768) setOpen(false); });
+        }
+
+        // --- 2. LÓGICA CALCULADORA DE RENDIMIENTO RUTA ---
+        let isAmbi = false;
+
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+
+        function animateNumber(elementId, newValue) {
+            const el = document.getElementById(elementId);
+            if(el && el.innerText !== newValue.toString()) {
+                el.classList.add('scale-110');
+                el.innerText = newValue;
+                setTimeout(() => {
+                    el.classList.remove('scale-110');
+                }, 300);
+            }
+        }
+
+        function updateCalculator() {
+            const chainringEl = document.getElementById('chainring');
+            const cogEl = document.getElementById('cog');
+            const portSelector = document.getElementById('port-selector');
+            
+            if(!chainringEl || !cogEl || !portSelector) return;
+
+            const chainring = parseInt(chainringEl.value);
+            const cog = parseInt(cogEl.value);
+            const portId = portSelector.value;
+            
+            document.getElementById('chainring-val').innerText = chainring + "T";
+            document.getElementById('cog-val').innerText = cog + "T";
+            
+            // Cálculo Ratio (numérico; se formatea solo al mostrarlo)
+            const ratio = Math.round((chainring / cog) * 100) / 100;
+            animateNumber('res-ratio', ratio.toFixed(2));
+            
+            // Barra Visual (Ajustada para Ruta: rangos más amplios hasta 5.5)
+            const minRatio = 1.0; 
+            const maxRatio = 5.5; 
+            let ratioPercent = ((ratio - minRatio) / (maxRatio - minRatio)) * 100;
+            ratioPercent = Math.max(0, Math.min(100, ratioPercent));
+            document.getElementById('ratio-bar').style.width = ratioPercent + '%';
+
+            // Retroalimentación Ruta
+            let feedback = "";
+            if(ratio <= 1.2) feedback = "Relación muy suave. Excelente para escalar pendientes duras en alta montaña.";
+            else if(ratio <= 2.0) feedback = "Buena para falsos planos, columpios y ascensos moderados.";
+            else if(ratio <= 3.0) feedback = "Ideal para rodar a ritmo medio/rápido en plano o pelotón.";
+            else if(ratio <= 4.0) feedback = "Relación dura. Exige potencia para aceleraciones en terreno llano.";
+            else feedback = "Relación muy dura. Sprints a tope o descensos rápidos a máxima velocidad.";
+            document.getElementById('ratio-feedback').innerText = feedback;
+
+            // Desarrollo (Rueda estándar ruta 700x25c aprox 2.10m)
+            const development = ((chainring / cog) * 2.10).toFixed(2);
+            animateNumber('res-dev', development);
+            
+            // Skid Patches (Funcionalidad heredada, como referencia de desgaste)
+            const g = gcd(chainring, cog);
+            let skidPatches = cog / g;
+            if (isAmbi && ((chainring / g) % 2 !== 0)) {
+                skidPatches *= 2;
+            }
+            
+            animateNumber('res-skids', skidPatches);
+            
+            const warningEl = document.getElementById('skid-warning');
+            if(warningEl) {
+                if (skidPatches <= 2) {
+                    warningEl.innerText = "Cuidado. Desgaste en muy pocos puntos teóricos.";
+                    warningEl.className = "text-red-500 font-bold mt-1 block";
+                } else if (skidPatches <= 6) {
+                    warningEl.innerText = "Desgaste moderado del neumático.";
+                    warningEl.className = "text-orange-400 font-medium mt-1 block";
+                } else {
+                    warningEl.innerText = "Excelente distribución del desgaste.";
+                    warningEl.className = "text-white font-bold mt-1 block";
+                }
+            }
+
+            renderSkidSVG(skidPatches);
+            updatePortRecommendation(portId, ratio);
+        }
+
+        function setAmbiMode(mode) {
+            isAmbi = mode;
+            const btnSingle = document.getElementById('btn-single-skid');
+            const btnAmbi = document.getElementById('btn-ambi-skid');
+            
+            if(!btnSingle || !btnAmbi) return;
+
+            if (isAmbi) {
+                btnAmbi.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg bg-zinc-800 text-white shadow transition-all";
+                btnSingle.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg text-zinc-500 hover:text-white transition-all bg-transparent";
+            } else {
+                btnSingle.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg bg-zinc-800 text-white shadow transition-all";
+                btnAmbi.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg text-zinc-500 hover:text-white transition-all bg-transparent";
+            }
+            updateCalculator();
+        }
+
+        function renderSkidSVG(patches) {
+            const svg = document.getElementById('skid-diagram-svg');
+            if(!svg) return;
+            svg.innerHTML = ''; 
+            
+            const baseCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            baseCircle.setAttribute("cx", "80");
+            baseCircle.setAttribute("cy", "80");
+            baseCircle.setAttribute("r", "70");
+            baseCircle.setAttribute("fill", "none");
+            baseCircle.setAttribute("stroke", "#27272a"); 
+            baseCircle.setAttribute("stroke-width", "4");
+            svg.appendChild(baseCircle);
+            
+            const radius = 70;
+            const centerX = 80;
+            const centerY = 80;
+            const drawPatches = Math.min(patches, 100); 
+
+            for (let i = 0; i < drawPatches; i++) {
+                const angle = (i * 2 * Math.PI) / patches;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                dot.setAttribute("cx", x);
+                dot.setAttribute("cy", y);
+                dot.setAttribute("r", "6");
+                dot.setAttribute("fill", "#FACC15"); // brand-yellow
+                
+                const innerDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                innerDot.setAttribute("cx", x);
+                innerDot.setAttribute("cy", y);
+                innerDot.setAttribute("r", "2");
+                innerDot.setAttribute("fill", "#000000");
+                
+                svg.appendChild(dot);
+                svg.appendChild(innerDot);
+            }
+        }
+
+        function updatePortRecommendation(portId, ratio) {
+            const recContainer = document.getElementById('port-recommendation');
+            const recTitle = document.getElementById('rec-title');
+            const recText = document.getElementById('rec-text');
+
+            if(!recContainer || !recTitle || !recText) return;
+
+            const iconContainer = recContainer.querySelector('div:first-child');
+            const iconEl = recContainer.querySelector('i');
+
+            if (portId === 'none') {
+                recContainer.classList.add('hidden');
+                recContainer.classList.remove('flex');
+                return;
+            }
+
+            recContainer.classList.remove('hidden');
+            recContainer.classList.add('flex');
+
+            let title = "";
+            let text = "";
+            let isWarning = false;
+
+            switch(portId) {
+                case 'patios':
+                    title = "Tips Ruta: Alto de Patios";
+                    if (ratio > 1.8) { text = "Mucha dureza para rampas constantes del 7%. Te recomendamos un piñón más grande para no quemar las piernas."; isWarning = true; }
+                    else text = "Relación ideal. Mantén cadencia constante (80-90 RPM) y guarda energía para el último kilómetro.";
+                    break;
+                case 'lavega':
+                    title = "Tips Ruta: Alto del Vino (30km)";
+                    if (ratio > 2.0) { text = "Para 30km de ascenso, esta relación te fatigará rápido. Intenta acercarte a 1.4 - 1.6 para resistencia."; isWarning = true; }
+                    else text = "Perfecto para esta ruta de larga resistencia. Hidrátate bien y a mantener el paso en el asfalto.";
+                    break;
+                case 'cuchilla':
+                    title = "Tips Ruta: La Cuchilla";
+                    if (ratio > 1.6) { text = "La altitud pasará factura al final. Mejor llevar un desarrollo que te permita cadencia ágil."; isWarning = false; }
+                    else text = "Ratio clásico para escaladores. Encuentra tu ritmo y prepárate para los vientos en la cima.";
+                    break;
+                case 'letras':
+                    title = "Tips Ruta: Letras (81km)";
+                    if (ratio > 1.4) { text = "Ojo: Son +4 horas de ascenso continuo. Una relación muy suave protegerá tus articulaciones en la altitud."; isWarning = true; }
+                    else text = "Ratio de supervivencia perfecto. Aliméntate bien, cuida el ritmo cardíaco y a conquistar el mito.";
+                    break;
+            }
+
+            recTitle.innerText = title;
+            recText.innerText = text;
+
+            if(isWarning) {
+                recContainer.className = "flex bg-orange-500/10 border border-orange-500/30 p-5 rounded-2xl items-start gap-4 transition-all";
+                iconContainer.className = "bg-orange-500 p-2.5 rounded-xl text-black shadow-lg shadow-orange-500/20";
+                iconEl.className = "fa-solid fa-triangle-exclamation text-lg text-white";
+            } else {
+                recContainer.className = "flex bg-brand-yellow/10 border border-brand-yellow/30 p-5 rounded-2xl items-start gap-4 transition-all";
+                iconContainer.className = "bg-brand-yellow p-2.5 rounded-xl text-black shadow-lg shadow-yellow-500/20";
+                iconEl.className = "fa-solid fa-lightbulb text-lg";
+            }
+        }
+
+        // --- 3. LÓGICA SALÓN DE LA FAMA (CATEGORÍA RUTA) ---
+        const salonRutaData = [
+            { name: 'Esteban Cardozo', points: 150, trips: 12 },
+            { name: 'Cristian Cuervo', points: 145, trips: 12 },
+            { name: 'Jhon Pinilla', points: 120, trips: 10 },
+            { name: 'Victor Palomino', points: 115, trips: 9 },
+            { name: 'Cristian Villamil', points: 90, trips: 8 },
+            { name: 'William Hernandez Noriega', points: 85, trips: 7 },
+            { name: 'Jose Gabriel Chacon', points: 70, trips: 6 }
+        ];
+
+        function renderSalonFamaRuta() {
+            const container = document.getElementById('col-ruta');
+            if (!container) return;
+
+            let html = `
+                <div class="glass-card rounded-3xl p-8 flex flex-col relative overflow-hidden group shadow-[0_0_40px_rgba(250,204,21,0.1)] border-t border-brand-yellow/30">
+                    <i class="fa-solid fa-road absolute -right-6 -top-6 text-[120px] text-brand-yellow/5 group-hover:scale-110 transition-transform duration-700"></i>
+                    <h3 class="text-2xl font-black mb-8 text-white uppercase flex items-center justify-center border-b border-white/10 pb-4 tracking-widest">
+                        Clasificación Ruta (2025)
+                    </h3>
+                    <div class="space-y-4">
+            `;
+
+            salonRutaData.forEach((p, idx) => {
+                const pos = idx + 1;
+                const isFirst = pos === 1;
+                const isSecond = pos === 2;
+                const isThird = pos === 3;
+                
+                const rankClass = isFirst ? 'legacy-rank-1' : isSecond ? 'legacy-rank-2' : isThird ? 'legacy-rank-3' : 'bg-white/5 border-l-[3px] border-transparent';
+                const icon = isFirst ? '👑' : isSecond ? '🥈' : isThird ? '🥉' : `<span class="text-sm font-bold text-zinc-500">#${pos}</span>`;
+                const nameColor = isFirst ? 'text-brand-yellow font-black text-lg' : isSecond ? 'text-zinc-200 font-bold' : isThird ? 'text-white font-bold' : 'text-zinc-400 font-medium';
+                const pointsColor = isFirst ? 'text-brand-yellow' : isThird ? 'text-white' : 'text-white';
+
+                html += `
+                    <div class="flex items-center justify-between p-4 rounded-r-2xl ${rankClass} hover:bg-white/10 transition-colors transform hover:translate-x-2 duration-300">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 text-center text-xl flex justify-center items-center">${icon}</div>
+                            <div>
+                                <h4 class="uppercase ${nameColor} tracking-wide">${p.name}</h4>
+                                <div class="text-[10px] text-zinc-500 uppercase tracking-widest mt-1 font-semibold">
+                                    <i class="fa-solid fa-mountain-sun text-brand-yellow/60 mr-1"></i>${p.trips} Cumbres Coronadas
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-black ${pointsColor} drop-shadow-md">${p.points}</div>
+                            <div class="text-[9px] uppercase text-zinc-500 font-bold tracking-widest">Puntos</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BogoMTB | Comunidad Oficial de Ciclismo de Montaña</title>
+    <meta name="description" content="BogoMTB: comunidad oficial de ciclismo de montaña en Bogotá. Rutas, trochas, calculadora de rendimiento y salón de la fama MTB.">
+    <meta name="theme-color" content="#000000">
+    <meta property="og:title" content="BogoMTB | Comunidad Oficial de Ciclismo de Montaña">
+    <meta property="og:description" content="Conquistando trochas, compartiendo rutas y rompiendo límites en la naturaleza sobre dos ruedas.">
+    <meta property="og:image" content="https://i.ibb.co/Q3FqNsjH/bogo-MTB.png">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon actualizado a BogoMTB (bogocargo-dos) -->
+    <link rel="icon" type="image/png" href="https://i.ibb.co/G3v2ddDR/bogocargo-dos.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            cyan: '#00E5FF',     // Azul Cian principal (Rendimiento/MTB)
+                            blue: '#2563eb',     // Azul oscuro (Tailwind blue-600)
+                            lightblue: '#67e8f9',// Azul claro (Tailwind cyan-200)
+                            dark: '#000000',
+                            zinc850: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Compensa el header fijo al navegar con anclas (#calculadora, #reto-vol2) */
+        html { scroll-padding-top: 80px; }
+
+        body {
+            background-color: #000000; 
+            color: #F4F4F5; 
+            overflow-x: hidden; 
+        }
+
+        /* Animaciones Base */
+        @keyframes float { 
+            0% { transform: translateY(0px); } 
+            50% { transform: translateY(-12px); } 
+            100% { transform: translateY(0px); } 
+        }
+        .animate-float { animation: float 5s ease-in-out infinite; }
+
+        @keyframes glow { 
+            0% { opacity: 0.15; } 
+            50% { opacity: 0.4; } 
+            100% { opacity: 0.15; } 
+        }
+        .glow-effect { animation: glow 4s ease-in-out infinite; }
+
+        /* Animaciones de Entrada (Scroll) */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Utilidades Visuales Adaptadas a BogoMTB (Tonos Cian/Azul) */
+        .text-glow-cyan {
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.6), 0 0 30px rgba(0, 229, 255, 0.3);
+        }
+        .glass-card { 
+            background: linear-gradient(145deg, rgba(39, 39, 42, 0.7) 0%, rgba(24, 24, 27, 0.9) 100%); 
+            backdrop-filter: blur(16px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+        .glass-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 20px 40px -12px rgba(0, 229, 255, 0.15); /* Sombra cian */
+        }
+
+        /* Estilos Calculadora adaptados */
+        .number-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+        }
+
+        /* Personalización del input range - Ahora es Cian */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #00E5FF; /* Color brand-cyan oficial */
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #27272a; /* bg-zinc-800 */
+            border-radius: 2px;
+        }
+        /* Firefox */
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border: 0;
+            border-radius: 50%;
+            background: #00E5FF;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+        input[type=range]::-moz-range-track {
+            height: 4px;
+            background: #27272a;
+            border-radius: 2px;
+        }
+        input[type=range]:focus-visible { outline: 2px solid #00E5FF; outline-offset: 6px; border-radius: 4px; }
+
+        /* Estilos Salón de la Fama MTB */
+        .legacy-rank-1 { background: linear-gradient(90deg, rgba(0, 229, 255, 0.15) 0%, transparent 100%); border-left: 3px solid #00E5FF; }
+        .legacy-rank-2 { background: linear-gradient(90deg, rgba(228, 228, 231, 0.08) 0%, transparent 100%); border-left: 3px solid #E4E4E7; }
+        .legacy-rank-3 { background: linear-gradient(90deg, rgba(37, 99, 235, 0.15) 0%, transparent 100%); border-left: 3px solid #2563eb; }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    <!-- BogoMTB Intro: si ya se vio, se oculta antes de pintar la página (sin parpadeo) -->
+    <script>try{if(sessionStorage.getItem('bmb_seen')==='1'&&!/[?&]intro\b/.test(location.search))document.documentElement.classList.add('bmb-seen')}catch(e){}</script>
+    <style>html.bmb-seen #bmb{display:none}</style>
+    <!-- BogoMTB Intro: estilos -->
+<style id="bmb-css">
+html.bmb-lock{overflow:hidden}
+#bmb{--p:#00E5FF;--v:#2563eb;--l:#67e8f9;--f:#f4f4f5;--m:#8b8b93;position:fixed;inset:0;z-index:99999;background:#000;overflow:hidden;contain:layout paint;clip-path:polygon(0 0,100% 0,100% 100%,0 100%);font-family:Inter,system-ui,Arial,sans-serif;color:var(--f)}
+#bmb *{box-sizing:border-box;margin:0}
+#bmb.gone{display:none}
+#bmb.out{animation:bmbOut .7s cubic-bezier(.7,0,.3,1) forwards}
+@keyframes bmbOut{0%{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}50%{clip-path:polygon(70% 0,100% 0,100% 100%,20% 100%)}100%{clip-path:polygon(135% 0,135% 0,105% 100%,105% 100%)}}
+#bmb-in{position:absolute;inset:0}
+#bmb-bar{position:absolute;left:0;bottom:0;height:3px;width:0;background:linear-gradient(90deg,var(--p),var(--v));z-index:5}
+#bmb.run #bmb-bar{animation:bmbBar 4s linear forwards}
+@keyframes bmbBar{to{width:100%}}
+/* mapa topográfico */
+#bmb-map{position:absolute;inset:0;transition:opacity .5s,transform .8s ease-in}
+#bmb-map svg{position:absolute;inset:0;width:100%;height:100%}
+#bmb-map .ct path{fill:none;stroke:var(--p);stroke-width:.25;vector-effect:non-scaling-stroke}
+#bmb-map .ct{animation:bmbPulse 3s ease-in-out infinite}
+@keyframes bmbPulse{50%{opacity:.6}}
+#bmb:is(.s2,.s3,.s4) #bmb-map{opacity:0;transform:scale(1.5)}
+#bmb-map .tr{fill:none;stroke:#fff;stroke-width:1;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
+#bmb-map .gl{fill:none;stroke:var(--p);stroke-width:5;opacity:.35;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;vector-effect:non-scaling-stroke}
+/* HUD */
+#bmb-hud{position:absolute;left:max(18px,env(safe-area-inset-left,0px));top:max(18px,env(safe-area-inset-top,0px));font:700 11px/1.7 Inter,Arial,sans-serif;letter-spacing:.3em;color:var(--m);text-transform:uppercase;opacity:0;transition:opacity .3s}
+#bmb-hud b{display:block;font:900 clamp(26px,7vw,44px)/1 Inter,Arial,sans-serif;letter-spacing:-.02em;color:var(--f)}
+#bmb-hud i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--p);margin-right:8px;animation:bmbRec .8s steps(2) infinite}
+@keyframes bmbRec{50%{opacity:.2}}
+#bmb:is(.s0,.s1,.s2) #bmb-hud{opacity:1}
+/* escena lateral: salto */
+#bmb-side{position:absolute;inset:0;opacity:0;transition:opacity .35s}
+#bmb:is(.s2,.s3,.s4) #bmb-side{opacity:1}
+#bmb-side>div,#bmb-side>svg{position:absolute}
+#bmb-moon{--w:min(46vmin,330px);left:50%;top:34%;width:var(--w);height:var(--w);margin:calc(var(--w)/-2) 0 0 calc(var(--w)/-2);border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--l) 30%,var(--p) 62%,var(--v));box-shadow:0 0 90px 20px rgba(0,229,255,.35),0 0 0 14px rgba(0,229,255,.12),0 0 0 30px rgba(0,229,255,.07)}
+#bmb-mt{left:0;bottom:22%;width:200%;height:30%;animation:bmbPan 9s linear infinite;will-change:transform}
+@keyframes bmbPan{to{transform:translateX(-50%)}}
+#bmb-gd{inset:0;width:100%;height:100%}
+.rider{--w:min(34vw,260px);--h:calc(var(--w)*.633);left:0;top:calc(78vh - var(--h));width:var(--w);transform:translate(calc(-12vw - var(--w)/2),0);transform-origin:50% 70%;will-change:transform}
+.rider svg{display:block;width:100%;overflow:visible}
+#bmb:is(.s2,.s3,.s4) .rd{animation:bmbJump 1.8s linear forwards}
+#bmb .rd.e1{animation-delay:.07s;opacity:.28}#bmb .rd.e2{animation-delay:.14s;opacity:.16}#bmb .rd.e3{animation-delay:.21s;opacity:.08}
+@keyframes bmbJump{
+0%{transform:translate(calc(-14vw - var(--w)/2),0) rotate(0);animation-timing-function:cubic-bezier(.4,0,.8,.7)}
+27%{transform:translate(calc(20vw - var(--w)/2),0) rotate(0);animation-timing-function:linear}
+38%{transform:translate(calc(35vw - var(--w)/2),-9vh) rotate(-24deg);animation-timing-function:cubic-bezier(.2,.7,.4,1)}
+62%{transform:translate(calc(54vw - var(--w)/2),-32vh) rotate(-4deg);animation-timing-function:cubic-bezier(.6,0,.9,.6)}
+85%{transform:translate(calc(76vw - var(--w)/2),-1.5vh) rotate(16deg);animation-timing-function:ease-out}
+92%{transform:translate(calc(92vw - var(--w)/2),0) rotate(0);animation-timing-function:linear}
+100%{transform:translate(calc(125vw - var(--w)/2),0) rotate(0)}}
+#bmb .wh{transform-box:fill-box;transform-origin:center;animation:bmbSpin .3s linear infinite}
+@keyframes bmbSpin{to{transform:rotate(360deg)}}
+#bmb-dust{left:76vw;top:78vh}
+#bmb-dust i{position:absolute;border-radius:50%;background:rgba(180,240,255,.85);opacity:0}
+#bmb.s3 #bmb-dust i{animation:bmbDust .8s ease-out forwards}
+@keyframes bmbDust{0%{opacity:1;transform:translate(0,0) scale(.3)}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.4)}}
+#bmb-speed{inset:0;overflow:hidden}
+#bmb-speed i{position:absolute;height:2px;right:-40%;background:linear-gradient(90deg,transparent,var(--l) 60%,transparent);animation:bmbSt .3s linear infinite}
+@keyframes bmbSt{to{transform:translateX(-340%)}}
+#bmb:is(.s3,.s4) #bmb-side{opacity:.3}
+/* impacto */
+#bmb-flash{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(circle at 76% 78%,#fff,var(--p) 35%,transparent 70%)}
+#bmb.s3 #bmb-flash{animation:bmbFl .5s ease-out}
+@keyframes bmbFl{from{opacity:.95}to{opacity:0}}
+#bmb-ring{position:absolute;left:76vw;top:78vh;width:60vmin;height:60vmin;margin:-30vmin 0 0 -30vmin;border-radius:50%;border:2px solid var(--p);opacity:0;pointer-events:none}
+#bmb.s3 #bmb-ring{animation:bmbRing .9s ease-out forwards}
+@keyframes bmbRing{0%{opacity:.9;transform:scale(.1)}100%{opacity:0;transform:scale(4)}}
+/* logo */
+#bmb-logo{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 16px}
+#bmb.s3 #bmb-logo{animation:bmbHit .35s .03s}
+@keyframes bmbHit{20%{transform:translate(-9px,6px)}40%{transform:translate(8px,-7px)}60%{transform:translate(-5px,3px)}80%{transform:translate(2px,-2px)}}
+#bmb-logo h2{font-weight:900;font-size:clamp(54px,17vw,170px);letter-spacing:-.045em;line-height:.88}
+#bmb-logo h2 s{display:block;overflow:hidden;text-decoration:none;padding:.04em .06em}
+#bmb-logo h2 s span{display:block;transform:translateY(112%)}
+#bmb-logo h2 s+s span{background:linear-gradient(90deg,var(--l),var(--p) 40%,var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#bmb:is(.s3,.s4) #bmb-logo h2 s span{transform:none;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+#bmb:is(.s3,.s4) #bmb-logo h2 s+s span{transition-delay:.1s}
+#bmb-trail{width:min(70vw,420px);margin-top:6px;overflow:visible}
+#bmb-trail path{fill:none;stroke:var(--p);stroke-width:3;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1}
+#bmb:is(.s3,.s4) #bmb-trail path{animation:bmbDraw .9s .4s ease-out forwards}
+@keyframes bmbDraw{to{stroke-dashoffset:0}}
+#bmb-sub{font:700 clamp(9px,2.2vw,13px) Inter,Arial,sans-serif;letter-spacing:.4em;color:var(--m);margin-top:16px;text-transform:uppercase;opacity:0}
+#bmb-tag{font:900 clamp(14px,3.8vw,26px) Inter,Arial,sans-serif;margin-top:16px;opacity:0;transform:translateY(8px);background:linear-gradient(90deg,var(--l),var(--p),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#bmb-chip{margin-top:20px;font:900 clamp(10px,2.4vw,13px) Inter,Arial,sans-serif;letter-spacing:.22em;border:2px solid var(--p);color:var(--p);border-radius:99px;padding:8px 16px;opacity:0;text-transform:uppercase}
+#bmb:is(.s3,.s4) #bmb-sub{opacity:1;transition:opacity .3s .35s}
+#bmb:is(.s3,.s4) #bmb-tag{opacity:1;transform:none;transition:all .35s .5s}
+#bmb:is(.s3,.s4) #bmb-chip{opacity:1;transition:opacity .3s .65s}
+/* controles */
+#bmb-ctl{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:6;display:flex;gap:4px}
+#bmb-ctl button{font:700 11px Inter,Arial,sans-serif;letter-spacing:.25em;color:var(--m);background:none;border:0;cursor:pointer;padding:10px;touch-action:manipulation}
+#bmb-ctl button:hover{color:#fff}
+#bmb-ctl button.hint{color:var(--p);animation:bmbHint 1.2s ease-in-out infinite}
+@keyframes bmbHint{50%{opacity:.45}}
+@media (max-width:600px){#bmb-moon{box-shadow:0 0 60px 10px rgba(0,229,255,.3)}}
+@media (prefers-reduced-motion:reduce){#bmb{display:none}}
+</style>
+<noscript><style>#bmb{display:none}</style></noscript>
+</head>
+<body class="antialiased selection:bg-brand-cyan selection:text-black">
+<!-- ============ BOGOMTB INTRO · INICIO (justo después de <body>) ============ -->
+
+<div id="bmb">
+ <div id="bmb-in" aria-hidden="true">
+  <div id="bmb-map"><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"><g class="ct"><path d="M55.0 48.0L55.4 48.6L55.6 49.2L55.5 49.8L55.0 50.3L54.4 50.7L53.7 50.9L53.0 51.1L52.3 51.3L51.8 51.4L51.2 51.6L50.6 51.7L50.0 51.8L49.4 51.7L48.8 51.6L48.2 51.4L47.7 51.3L47.0 51.1L46.3 50.9L45.6 50.7L45.0 50.3L44.5 49.8L44.4 49.2L44.6 48.6L45.0 48.0L45.5 47.5L45.9 47.1L46.2 46.8L46.4 46.3L46.5 45.8L46.6 45.3L46.9 44.8L47.3 44.3L47.9 44.0L48.6 43.9L49.3 43.8L50.0 43.8L50.7 43.8L51.4 43.9L52.1 44.0L52.7 44.3L53.1 44.8L53.4 45.3L53.5 45.8L53.6 46.3L53.8 46.8L54.1 47.1L54.5 47.5L55.0 48.0z" style="opacity:0.75"/><path d="M62.4 48.0L62.6 49.3L62.1 50.6L61.1 51.7L59.8 52.5L58.4 53.2L57.2 53.8L56.1 54.4L55.0 55.0L53.9 55.5L52.6 55.8L51.3 55.9L50.0 55.9L48.7 55.8L47.4 55.7L46.0 55.7L44.4 55.7L42.8 55.5L41.2 55.1L39.9 54.2L39.1 53.0L39.0 51.6L39.5 50.3L40.2 49.0L40.9 48.0L41.3 47.1L41.3 46.1L41.2 45.1L41.2 43.9L41.4 42.7L42.0 41.6L43.0 40.7L44.3 40.1L45.6 39.6L47.1 39.2L48.5 38.9L50.0 38.7L51.5 38.7L53.0 39.1L54.2 39.8L55.2 40.8L55.9 41.9L56.4 42.9L56.9 43.8L57.8 44.4L58.9 45.0L60.3 45.8L61.5 46.8L62.4 48.0z" style="opacity:0.69"/><path d="M69.2 48.0L68.3 49.9L66.9 51.6L65.2 53.1L63.7 54.3L62.3 55.6L61.0 56.8L59.5 57.9L57.8 58.8L55.9 59.3L53.9 59.6L51.9 59.8L50.0 60.1L47.9 60.6L45.6 61.1L43.1 61.4L40.4 61.3L38.0 60.5L36.3 59.0L35.4 56.9L35.4 54.8L35.8 52.7L36.3 50.9L36.5 49.4L36.2 48.0L35.6 46.5L35.0 44.8L34.8 42.9L35.2 41.1L36.2 39.5L37.7 38.1L39.4 37.0L41.3 35.9L43.2 34.9L45.4 34.1L47.6 33.7L50.0 33.7L52.2 34.4L54.2 35.6L55.7 37.0L56.9 38.4L58.1 39.5L59.6 40.3L61.6 40.9L64.0 41.6L66.3 42.6L68.2 44.1L69.2 46.0L69.2 48.0z" style="opacity:0.63"/><path d="M73.7 48.0L72.3 50.3L70.9 52.5L69.6 54.5L68.3 56.5L66.8 58.3L64.9 59.9L62.6 61.1L60.1 62.0L57.6 62.7L55.2 63.6L52.8 64.7L50.0 66.1L46.8 67.3L43.3 67.9L39.8 67.6L36.9 66.2L34.8 63.9L33.7 61.0L33.4 58.2L33.3 55.7L32.9 53.7L32.0 51.9L30.6 50.0L29.2 48.0L28.1 45.7L27.9 43.3L28.5 40.9L29.8 38.7L31.5 36.6L33.4 34.7L35.5 32.9L37.8 31.2L40.6 29.9L43.7 29.2L46.9 29.4L50.0 30.5L52.6 32.0L54.8 33.5L56.9 34.7L59.1 35.4L61.9 35.6L65.2 35.9L68.7 36.5L71.8 37.9L74.0 40.0L75.0 42.6L74.7 45.4L73.7 48.0z" style="opacity:0.57"/><path d="M77.5 48.0L76.8 50.8L76.0 53.6L74.8 56.2L73.0 58.6L70.6 60.6L67.9 62.3L65.1 63.8L62.6 65.4L60.0 67.4L57.3 69.7L54.0 72.1L50.0 73.9L45.6 74.5L41.4 73.7L37.9 71.4L35.4 68.3L33.8 64.9L32.6 61.9L31.4 59.4L29.6 57.4L27.3 55.5L24.8 53.4L22.7 50.9L21.5 48.0L21.2 45.0L21.9 42.0L23.0 39.1L24.5 36.2L26.2 33.4L28.3 30.6L31.1 28.2L34.6 26.6L38.6 26.0L42.8 26.5L46.7 27.7L50.0 29.1L52.9 30.1L55.9 30.4L59.3 30.0L63.4 29.5L67.9 29.4L72.2 30.2L75.8 32.2L78.1 35.0L79.1 38.4L78.9 41.8L78.3 45.0L77.5 48.0z" style="opacity:0.51"/><path d="M82.7 48.0L82.3 51.4L81.0 54.6L78.9 57.6L76.3 60.1L73.6 62.5L71.2 64.9L69.0 67.8L66.8 71.2L63.9 74.9L60.1 78.0L55.3 79.9L50.0 80.1L45.0 78.5L40.8 75.6L37.5 72.1L35.0 68.8L32.6 66.1L29.9 64.1L26.5 62.4L22.9 60.5L19.6 58.1L17.1 55.0L15.7 51.6L15.2 48.0L15.4 44.4L15.8 40.7L16.6 36.9L17.8 33.1L20.0 29.6L23.4 26.8L27.9 25.0L33.0 24.5L38.1 25.0L42.6 25.8L46.4 26.4L50.0 26.1L53.8 25.0L58.2 23.4L63.4 22.2L68.8 22.0L73.7 23.3L77.6 25.9L80.1 29.5L81.4 33.5L82.0 37.4L82.3 41.1L82.6 44.6L82.7 48.0z" style="opacity:0.45"/><path d="M87.8 48.0L86.4 51.8L84.2 55.3L81.9 58.6L80.0 61.9L78.7 65.6L77.5 70.0L75.7 74.8L72.6 79.3L68.0 82.8L62.2 84.4L55.9 84.0L50.0 81.7L45.0 78.6L40.8 75.4L37.1 72.9L33.2 71.2L28.9 70.0L24.3 68.6L19.7 66.6L15.8 63.8L13.0 60.3L11.1 56.3L9.8 52.2L8.8 48.0L8.0 43.6L7.9 39.0L8.9 34.4L11.6 30.3L16.0 27.1L21.6 25.3L27.6 24.6L33.1 24.6L37.8 24.4L41.8 23.4L45.6 21.3L50.0 18.5L55.3 15.9L61.3 14.4L67.3 14.5L72.7 16.5L77.0 19.8L80.1 23.9L82.4 28.1L84.3 32.2L86.0 36.1L87.4 40.0L88.1 44.0L87.8 48.0z" style="opacity:0.39"/><path d="M90.5 48.0L89.0 52.1L88.0 56.1L87.8 60.5L88.1 65.6L88.0 71.3L86.4 77.1L82.8 82.2L77.1 85.5L70.0 86.6L62.6 85.7L55.8 83.4L50.0 80.9L44.9 79.0L40.0 77.9L34.8 77.3L29.2 76.8L23.6 75.6L18.3 73.3L13.9 70.1L10.4 66.3L7.4 62.1L4.6 57.7L2.0 53.1L-0.0 48.0L-0.8 42.7L0.5 37.4L4.2 32.8L9.7 29.4L16.2 27.2L22.4 25.9L27.7 24.7L31.8 22.8L35.4 19.7L39.2 15.7L44.0 11.7L50.0 8.5L56.7 7.2L63.4 7.9L69.4 10.5L74.5 14.1L78.6 18.1L82.3 22.1L85.7 26.1L88.8 30.1L91.0 34.4L92.1 39.0L91.8 43.6L90.5 48.0z" style="opacity:0.33"/><path d="M93.9 48.0L95.1 52.8L97.3 58.1L99.4 64.4L100.0 71.1L98.0 77.5L93.2 82.6L86.0 85.6L77.7 86.4L69.5 85.6L62.2 84.3L55.8 83.3L50.0 83.1L44.1 83.6L37.9 84.1L31.4 84.0L25.0 82.7L19.1 80.2L13.9 76.9L9.2 73.1L4.5 69.0L-0.2 64.6L-4.5 59.7L-7.5 54.1L-8.1 48.0L-6.0 42.1L-1.2 37.0L5.1 33.1L11.6 30.3L17.1 27.8L21.1 24.9L23.9 20.8L26.7 15.7L30.5 10.3L35.8 5.5L42.5 2.4L50.0 1.5L57.5 2.7L64.3 5.3L70.4 8.6L76.0 12.0L81.2 15.4L86.1 19.2L90.1 23.4L92.8 28.2L94.0 33.4L94.0 38.6L93.7 43.4L93.9 48.0z" style="opacity:0.27"/><path d="M103.8 48.0L108.3 54.1L111.6 61.2L112.0 68.6L108.9 75.2L102.5 80.2L94.0 83.2L84.9 84.4L76.4 84.6L69.1 85.0L62.7 86.0L56.5 87.7L50.0 89.6L43.0 90.7L35.7 90.7L28.6 89.3L21.9 86.9L15.5 84.0L8.9 80.9L2.2 77.4L-4.4 73.1L-9.8 67.8L-12.9 61.5L-12.9 54.6L-9.7 48.0L-4.2 42.3L2.0 37.7L7.2 33.8L10.6 29.8L12.5 25.0L13.7 19.0L15.8 12.3L19.7 6.0L25.7 1.1L33.4 -1.7L41.7 -2.3L50.0 -1.2L57.8 0.7L65.1 3.0L72.1 5.4L78.7 8.3L84.6 12.0L89.2 16.7L92.2 22.1L93.9 27.7L95.1 33.1L96.7 38.0L99.6 42.8L103.8 48.0z" style="opacity:0.21"/><path d="M119.7 48.0L123.0 55.7L122.4 63.5L117.6 70.4L109.8 75.6L100.6 79.1L91.7 81.3L83.9 83.4L77.3 85.9L71.2 88.9L64.8 92.2L57.7 94.8L50.0 96.3L42.0 96.3L34.2 95.3L26.3 93.7L18.3 92.0L9.8 89.9L1.1 87.1L-6.7 82.8L-12.5 76.9L-15.1 69.6L-14.2 61.8L-10.4 54.4L-5.3 48.0L-0.9 42.6L1.6 37.6L2.1 32.1L1.5 25.6L1.4 18.2L3.3 10.6L7.8 4.0L14.8 -0.7L23.4 -3.4L32.5 -4.4L41.4 -4.3L50.0 -3.7L58.4 -2.8L66.5 -1.3L74.2 1.3L80.8 5.4L85.9 10.6L89.5 16.4L92.4 21.9L95.7 26.9L100.4 31.3L106.6 35.9L113.6 41.3L119.7 48.0z" style="opacity:0.15"/></g>
+   <path class="gl" pathLength="1" d="M50 98C30 92 20 84 38 80S74 76 62 70 28 64 44 58 70 54 56 50 46 47 52 44"><animate attributeName="stroke-dashoffset" from="1" to="0" begin=".3s" dur="1s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".4 0 .2 1"/></path>
+   <path class="tr" pathLength="1" d="M50 98C30 92 20 84 38 80S74 76 62 70 28 64 44 58 70 54 56 50 46 47 52 44"><animate attributeName="stroke-dashoffset" from="1" to="0" begin=".3s" dur="1s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".4 0 .2 1"/></path>
+   <circle r="1.4" fill="#fff"><animateMotion begin=".3s" dur="1s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines=".4 0 .2 1" path="M50 98C30 92 20 84 38 80S74 76 62 70 28 64 44 58 70 54 56 50 46 47 52 44"/></circle></svg></div>
+  <div id="bmb-side">
+   <div id="bmb-moon"></div>
+   <svg id="bmb-mt" viewBox="0 0 200 30" preserveAspectRatio="none"><path fill="#04141a" d="M0 30V18l8-10 6 6 10-12 9 14 7-6 10 12 9-14 8 9 9-7 8 12 6-5 10 8 9-13 10 11 8-6 9 9V30z"/><path fill="#04141a" d="M100 30V18l8-10 6 6 10-12 9 14 7-6 10 12 9-14 8 9 9-7 8 12 6-5 10 8 9-13 10 11 8-6 9 9V30z" transform="translate(100 0)"/></svg>
+   <svg id="bmb-gd" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="0,100 0,78 22,78 35,69 36,100 64,100 64,74 82,78 100,78 100,100" fill="#02080b"/><path d="M0 78H22L35 69M64 74 82 78H100" fill="none" stroke="#00E5FF" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+   <svg width="0" height="0" style="position:absolute" focusable="false"><defs><linearGradient id="bmg" gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="280" y2="0"><stop offset="0" stop-color="#00E5FF"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs></svg>
+   <div id="bmb-speed"></div>
+   <div class="rider rd e3"><svg viewBox="0 0 300 190">
+<g class="wh"><circle cx="70" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="70" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M28 148h84M70 106v84M40 118l60 60M100 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<g class="wh"><circle cx="232" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="232" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M190 148h84M232 106v84M202 118l60 60M262 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<path d="M70 148 135 150 118 98 196 92 135 150M118 98 70 148M196 92 203 106 232 148M118 98h-14M196 92l-2-12M188 78h20" fill="none" stroke="url(#bmg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M140 100 114 120" stroke="#67e8f9" stroke-width="7" stroke-linecap="round"/>
+<g fill="none" stroke="#e5f6ff" stroke-linecap="round" stroke-linejoin="round"><path d="M110 66 128 106 148 148M110 66 106 108 118 148" stroke-width="9"/><path d="M110 66 160 40" stroke-width="12"/><path d="M158 42 182 62 198 80" stroke-width="6"/></g>
+<circle cx="171" cy="29" r="10" fill="#e5f6ff"/><path d="M160 27a11 11 0 0 1 22-2l4 3-26 4z" fill="url(#bmg)"/><path d="M174 29h12" stroke="#00E5FF" stroke-width="4" stroke-linecap="round"/></svg></div><div class="rider rd e2"><svg viewBox="0 0 300 190">
+<g class="wh"><circle cx="70" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="70" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M28 148h84M70 106v84M40 118l60 60M100 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<g class="wh"><circle cx="232" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="232" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M190 148h84M232 106v84M202 118l60 60M262 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<path d="M70 148 135 150 118 98 196 92 135 150M118 98 70 148M196 92 203 106 232 148M118 98h-14M196 92l-2-12M188 78h20" fill="none" stroke="url(#bmg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M140 100 114 120" stroke="#67e8f9" stroke-width="7" stroke-linecap="round"/>
+<g fill="none" stroke="#e5f6ff" stroke-linecap="round" stroke-linejoin="round"><path d="M110 66 128 106 148 148M110 66 106 108 118 148" stroke-width="9"/><path d="M110 66 160 40" stroke-width="12"/><path d="M158 42 182 62 198 80" stroke-width="6"/></g>
+<circle cx="171" cy="29" r="10" fill="#e5f6ff"/><path d="M160 27a11 11 0 0 1 22-2l4 3-26 4z" fill="url(#bmg)"/><path d="M174 29h12" stroke="#00E5FF" stroke-width="4" stroke-linecap="round"/></svg></div><div class="rider rd e1"><svg viewBox="0 0 300 190">
+<g class="wh"><circle cx="70" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="70" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M28 148h84M70 106v84M40 118l60 60M100 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<g class="wh"><circle cx="232" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="232" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M190 148h84M232 106v84M202 118l60 60M262 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<path d="M70 148 135 150 118 98 196 92 135 150M118 98 70 148M196 92 203 106 232 148M118 98h-14M196 92l-2-12M188 78h20" fill="none" stroke="url(#bmg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M140 100 114 120" stroke="#67e8f9" stroke-width="7" stroke-linecap="round"/>
+<g fill="none" stroke="#e5f6ff" stroke-linecap="round" stroke-linejoin="round"><path d="M110 66 128 106 148 148M110 66 106 108 118 148" stroke-width="9"/><path d="M110 66 160 40" stroke-width="12"/><path d="M158 42 182 62 198 80" stroke-width="6"/></g>
+<circle cx="171" cy="29" r="10" fill="#e5f6ff"/><path d="M160 27a11 11 0 0 1 22-2l4 3-26 4z" fill="url(#bmg)"/><path d="M174 29h12" stroke="#00E5FF" stroke-width="4" stroke-linecap="round"/></svg></div><div class="rider rd"><svg viewBox="0 0 300 190">
+<g class="wh"><circle cx="70" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="70" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M28 148h84M70 106v84M40 118l60 60M100 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<g class="wh"><circle cx="232" cy="148" r="42" fill="none" stroke="url(#bmg)" stroke-width="6"/><circle cx="232" cy="148" r="46" fill="none" stroke="#e5f6ff" stroke-width="3" stroke-dasharray="3 5"/><path d="M190 148h84M232 106v84M202 118l60 60M262 118l-60 60" stroke="#67e8f9" stroke-width="1.4" opacity=".6"/></g>
+<path d="M70 148 135 150 118 98 196 92 135 150M118 98 70 148M196 92 203 106 232 148M118 98h-14M196 92l-2-12M188 78h20" fill="none" stroke="url(#bmg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M140 100 114 120" stroke="#67e8f9" stroke-width="7" stroke-linecap="round"/>
+<g fill="none" stroke="#e5f6ff" stroke-linecap="round" stroke-linejoin="round"><path d="M110 66 128 106 148 148M110 66 106 108 118 148" stroke-width="9"/><path d="M110 66 160 40" stroke-width="12"/><path d="M158 42 182 62 198 80" stroke-width="6"/></g>
+<circle cx="171" cy="29" r="10" fill="#e5f6ff"/><path d="M160 27a11 11 0 0 1 22-2l4 3-26 4z" fill="url(#bmg)"/><path d="M174 29h12" stroke="#00E5FF" stroke-width="4" stroke-linecap="round"/></svg></div>
+   <div id="bmb-dust"></div>
+  </div>
+  <div id="bmb-hud"><i></i>Trocha · Cerros de Bogotá<b id="bmb-alt">2.640 m</b></div>
+  <div id="bmb-ring"></div>
+  <div id="bmb-logo"><h2><s><span>BOGO</span></s><s><span>MTB</span></s></h2>
+   <svg id="bmb-trail" viewBox="0 0 400 24"><path pathLength="1" d="M0 16C40 2 70 26 110 14S170 2 200 14 260 26 300 12 360 4 400 14"/></svg>
+   <div id="bmb-sub">Comunidad oficial de ciclismo de montaña · Bogotá</div><div id="bmb-tag"></div><div id="bmb-chip">◆ Trocha abierta</div></div>
+  <div id="bmb-flash"></div>
+ </div>
+ <div id="bmb-bar"></div>
+ <div id="bmb-ctl"><button id="bmb-snd" type="button">SONIDO OFF</button><button id="bmb-skip" type="button">SALTAR ›</button></div>
+</div>
+
+<script>
+(function(){
+  var ONCE=true; // true = la intro sale una vez por visita: al abrir la página sí, al recargar o volver dentro de la misma pestaña no (false = en cada carga)
+  var $=function(i){return document.getElementById(i)},intro=$('bmb'),root=document.documentElement,
+  TAGS=['CONQUISTANDO TROCHAS.','ROMPIENDO LÍMITES EN LA NATURALEZA.','LA MONTAÑA NO ESPERA.','DOS RUEDAS. CERO ASFALTO.'],
+  timers=[],done=true,raf=0,ac=null,cur=0,wantSound=true,mst=null,nb=null;
+
+  // polvo del aterrizaje y líneas de velocidad
+  var du=$('bmb-dust');for(var i=0;i<16;i++){var e=document.createElement('i'),a=-Math.PI*(.1+Math.random()*.8),d=40+Math.random()*130,s=6+Math.random()*10;
+    e.style.cssText='width:'+s+'px;height:'+s+'px;--x:'+(Math.cos(a)*d*(Math.random()<.5?-1:1)).toFixed(0)+'px;--y:'+(Math.sin(a)*d*.7).toFixed(0)+'px;animation-delay:'+(Math.random()*.08)+'s';du.appendChild(e)}
+  var sp=$('bmb-speed');for(var i=0,N=innerWidth<600?7:12;i<N;i++){var l=document.createElement('i');l.style.cssText='top:'+(8+Math.random()*84)+'%;width:'+(20+Math.random()*40)+'%;animation-delay:'+(Math.random()*.3)+'s;opacity:'+(.2+Math.random()*.5);sp.appendChild(l)}
+
+  function pickTag(){var n=0;try{n=+localStorage.getItem('bmb_n')||0;localStorage.setItem('bmb_n',n+1)}catch(e){n=Math.floor(Math.random()*4)}return TAGS[n%TAGS.length]}
+  function whenLoaded(fn){if(document.readyState==='complete')fn();else addEventListener('load',fn,{once:true})}
+  function at(ms,fn){timers.push(setTimeout(fn,ms))}
+  function st(n){cur=n;intro.className='run s'+n}
+  function fmt(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+$)/g,'.')+' m'}
+
+  // sonido 100 % sintetizado (Web Audio, 0 KB). Si el navegador bloquea el autoplay, corre en silencio
+  // y el sonido se activa con el primer toque o tecla, sin errores.
+  function canAuto(){try{if(navigator.getAutoplayPolicy)return navigator.getAutoplayPolicy('audiocontext')!=='disallowed'}catch(e){}return true}
+  function initAudio(){
+    if(ac){if(ac.state==='suspended')ac.resume();return ac}
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+    try{ac=new AC()}catch(e){return null}
+    ac.onstatechange=label;
+    var comp=ac.createDynamicsCompressor(),dl=ac.createDelay(),fb=ac.createGain(),wet=ac.createGain();
+    mst=ac.createGain();mst.gain.value=wantSound?.9:0;dl.delayTime.value=.17;fb.gain.value=.34;wet.gain.value=.24;
+    mst.connect(comp);comp.connect(ac.destination);mst.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(comp);
+    nb=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);var d=nb.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    return ac;
+  }
+  function osc(dt,type,f0,f1,dur,vol){
+    if(!ac||ac.state!=='running')return;
+    var o=ac.createOscillator(),g=ac.createGain(),a=ac.currentTime+dt;
+    o.type=type;o.frequency.setValueAtTime(f0,a);o.frequency.exponentialRampToValueAtTime(Math.max(1,f1),a+dur);
+    g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(vol,a+.008);g.gain.exponentialRampToValueAtTime(.0001,a+dur);
+    o.connect(g);g.connect(mst);o.start(a);o.stop(a+dur+.05);
+  }
+  function noise(dt,type,f0,f1,dur,vol,atk){
+    if(!ac||ac.state!=='running')return;
+    var n=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain(),a=ac.currentTime+dt;
+    n.buffer=nb;n.loop=true;fl.type=type;fl.Q.value=1.2;
+    fl.frequency.setValueAtTime(f0,a);fl.frequency.exponentialRampToValueAtTime(f1,a+dur);
+    g.gain.setValueAtTime(0,a);g.gain.linearRampToValueAtTime(vol,a+(atk||.01));g.gain.exponentialRampToValueAtTime(.0001,a+dur);
+    n.connect(fl);fl.connect(g);g.connect(mst);n.start(a);n.stop(a+dur+.05);
+  }
+  var fx={
+    start:function(){noise(0,'bandpass',300,1400,1,.22,.7);osc(0,'sine',1200,1200,.14,.1)},                // viento + blip de GPS
+    trail:function(){for(var k=0;k<5;k++)osc(k*.2,'sine',880+k*110,880+k*110,.09,.07)},                      // el GPS marca la subida
+    drop:function(){osc(0,'sine',200,40,.5,.6);noise(0,'highpass',6000,1500,.3,.25,.05);                    // drop in + grava
+      for(var k=0;k<14;k++)noise(.15+k*.04,'bandpass',2600,1800,.04,.2);for(var k=0,t=.1;k<8;k++){noise(t,'highpass',3500,2000,.03,.25);t+=.08}},
+    jump:function(){osc(0,'sine',90,320,.4,.3);noise(0,'bandpass',300,3200,.5,.4,.3)},                       // rampa
+    air:function(){noise(0,'lowpass',2200,200,.7,.25,.3);osc(0,'sine',400,1500,.6,.06)},                    // cámara lenta en el aire
+    hit:function(){osc(0,'sine',110,30,1,.95);noise(0,'lowpass',6000,300,.6,.6);for(var k=0;k<10;k++)noise(k*.03,'bandpass',2200,1200,.05,.25); // aterrizaje + BOGOMTB
+      [220,277.2,330,415.3,554.4].forEach(function(f){osc(0,'sawtooth',f,f*.997,1.3,.045)});osc(.15,'sine',1318.5,1318.5,.9,.06);osc(.3,'sine',1760,1760,1,.05)},
+    out:function(){noise(0,'bandpass',5000,200,.5,.4,.3);osc(0,'sine',600,70,.5,.25)}
+  };
+  var stageFx=[null,fx.trail,fx.drop,fx.hit,null];
+  function label(){var b=$('bmb-snd');
+    if(!wantSound){b.textContent='SONIDO OFF';b.className=''}
+    else if(ac&&ac.state==='running'){b.textContent='SONIDO ON';b.className=''}
+    else{b.textContent='TOCA PARA SONIDO';b.className='hint'}}
+  function level(v){if(ac&&mst)mst.gain.setTargetAtTime(v,ac.currentTime,.03)}
+  function unlock(){ // llamado desde un gesto del usuario (Safari/iOS y Chrome lo exigen)
+    if(!wantSound||(!ac&&!initAudio()))return;
+    if(ac.state!=='running')ac.resume().then(function(){label();if(!done&&stageFx[cur])stageFx[cur]()},function(){});
+  }
+  $('bmb-snd').onclick=function(){
+    if(wantSound&&(!ac||ac.state!=='running')){unlock();return}
+    wantSound=!wantSound;if(wantSound)unlock();level(wantSound?.9:0);label();
+  };
+
+  function climb(t0){ // elevación 2.640 → 3.152 m mientras se traza la subida
+    cancelAnimationFrame(raf);
+    (function f(now){var p=Math.min(1,(now-t0)/1000);p=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;$('bmb-alt').textContent=fmt(2640+512*p);if(p<1)raf=requestAnimationFrame(f)})(performance.now());
+  }
+
+  var EVTS=['pointerdown','touchend','click','keydown'];
+  function onGesture(e){if(e.target&&e.target.closest&&e.target.closest('#bmb-snd'))return;unlock()}
+  function onKey(e){if(e.key==='Escape')skipIt()}
+
+  function finish(){
+    if(done)return;done=true;timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf);
+    // la intro terminó: deja de escuchar los clics/teclas de la página
+    EVTS.forEach(function(n){removeEventListener(n,onGesture,true)});removeEventListener('keydown',onKey);
+    intro.classList.add('out');
+    setTimeout(function(){intro.classList.add('gone');root.classList.remove('bmb-lock');
+      if(ac){ac.onstatechange=null;try{var p=ac.close();if(p&&p.catch)p.catch(function(){})}catch(e){}ac=null} // libera el audio
+      document.dispatchEvent(new Event('bogomtb:intro-end'))},720);
+  }
+
+  function play(){
+    timers.forEach(clearTimeout);timers=[];done=false;level(wantSound?.9:0);
+    root.classList.add('bmb-lock');
+    $('bmb-tag').textContent=pickTag();$('bmb-alt').textContent='2.640 m';
+    intro.className='';void intro.offsetWidth;
+    st(0);fx.start();                                            // 0 s: mapa topográfico + viento
+    at(300,function(){st(1);climb(performance.now());fx.trail()});  // se traza la trocha hasta la cima
+    at(1150,function(){st(2);fx.drop()});                        // DROP IN: la cámara cae a la trocha
+    at(1830,fx.jump);                                            // rampa
+    at(2250,fx.air);                                             // vuelo en cámara lenta
+    at(2680,function(){st(3);fx.hit()});                         // aterriza: BOGOMTB
+    at(4150,function(){st(4);whenLoaded(function(){if(done)return;fx.out();finish()})}); // corte diagonal cuando la página esté lista
+    at(6500,finish);                                             // tope: nunca más de ~6,5 s
+  }
+
+  function skipIt(){level(0);finish()}
+  $('bmb-skip').onclick=skipIt;
+
+  function start(){
+    if(canAuto())initAudio();                                    // evita avisos de autoplay en consola
+    if(ac&&ac.state!=='running')ac.resume().then(label,function(){});
+    EVTS.forEach(function(n){addEventListener(n,onGesture,{capture:true,passive:true})});
+    addEventListener('keydown',onKey);
+    label();play();
+  }
+  // se recuerda mientras la pestaña esté abierta (sessionStorage); agrega ?intro a la URL para volver a verla
+  var force=/[?&]intro\b/.test(location.search),seen=false;
+  try{seen=ONCE&&!force&&sessionStorage.getItem('bmb_seen')==='1'}catch(e){}
+  if(!seen)root.classList.remove('bmb-seen');
+  if(force&&history.replaceState)try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){} // limpia ?intro de la URL
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||seen){intro.classList.add('gone')}
+  else{try{sessionStorage.setItem('bmb_seen','1');localStorage.removeItem('bmb_seen')}catch(e){}start()}
+})();
+</script>
+<!-- ============ BOGOMTB INTRO · FIN ============ -->
+
+    <header class="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/5 transition-all duration-300">
+        <nav class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#home" class="flex items-center gap-3" aria-label="BogoMTB, ir al inicio">
+                <!-- Logo principal BogoMTB -->
+                <img src="https://i.ibb.co/Q3FqNsjH/bogo-MTB.png" alt="Logo BogoMTB" class="h-10 w-auto drop-shadow-lg object-contain">
+                <div>
+                    <span class="font-black tracking-tighter text-lg leading-none block bg-gradient-to-r from-brand-cyan to-brand-blue bg-clip-text text-transparent">BOGOMTB</span>
+                    <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest block">Ciclismo de Montaña</span>
+                </div>
+            </a>
+            
+            <!-- Navegación simplificada -->
+            <div class="space-x-8 font-bold text-xs uppercase tracking-widest hidden md:block">
+                <a href="#calculadora" class="text-zinc-400 hover:text-brand-cyan transition-colors">Calculadora</a>
+                <a href="#reto-vol2" class="text-zinc-400 hover:text-brand-blue transition-colors">Salón de la Fama</a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <a href="https://www.instagram.com/bogomtb/" target="_blank" rel="noopener noreferrer" aria-label="Instagram de BogoMTB" class="text-white hover:text-brand-cyan transition-colors md:ml-4 group">
+                    <i class="fa-brands fa-instagram text-xl group-hover:scale-110 transition-transform"></i>
+                </a>
+                <button id="menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu" class="md:hidden text-white hover:text-brand-cyan w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-bars text-xl"></i></button>
+            </div>
+        </nav>
+
+        <!-- Menú móvil -->
+        <div id="mobile-menu" class="md:hidden hidden border-t border-white/5 bg-black/95">
+            <div class="px-6 py-5 flex flex-col gap-5 font-bold text-xs uppercase tracking-widest">
+                <a href="#calculadora" class="text-zinc-300 hover:text-brand-cyan transition-colors">Calculadora</a>
+                <a href="#reto-vol2" class="text-zinc-300 hover:text-brand-cyan transition-colors">Salón de la Fama</a>
+                <a href="https://chat.whatsapp.com/KHFufDawbr03tU3M0pg13H" target="_blank" rel="noopener noreferrer" class="text-[#25D366] hover:brightness-110 transition-colors"><i class="fa-brands fa-whatsapp mr-2"></i>Grupo WhatsApp</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-28 pb-16 relative overflow-hidden">
+            <!-- Background Glows adaptados a Cian -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-cyan/10 blur-[120px] rounded-full pointer-events-none"></div>
+            
+            <div class="relative group mb-6 reveal">
+                <div class="absolute -inset-8 bg-gradient-to-r from-brand-cyan to-brand-blue rounded-full blur-3xl glow-effect opacity-30"></div>
+                <!-- Símbolo o Logo Principal Central (bogocargo-dos) -->
+                <img src="https://i.ibb.co/G3v2ddDR/bogocargo-dos.png" alt="Símbolo BogoMTB" class="relative w-28 md:w-32 xl:w-36 h-auto animate-float drop-shadow-2xl">
+            </div>
+            <h1 class="text-6xl md:text-8xl xl:text-[6.75rem] font-black mb-5 leading-none tracking-tighter reveal" style="transition-delay: 100ms;">
+                BOGO<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue text-glow-cyan">MTB</span>
+            </h1>
+            <p class="text-sm md:text-base text-zinc-400 mb-8 max-w-xl reveal" style="transition-delay: 200ms;">
+                Comunidad oficial de ciclismo de montaña en Bogotá. Conquistando trochas, compartiendo rutas y rompiendo límites en la naturaleza sobre dos ruedas.
+            </p>
+
+            <!-- Familia BOGO (Reordenada para priorizar BogoMTB) -->
+            <div class="reveal w-full max-w-3xl mx-auto flex flex-col items-center gap-5 mb-8" style="transition-delay: 250ms;">
+                <div class="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+                    <!-- BogoMTB (Destacado Principal) -->
+                    <a href="https://www.instagram.com/bogomtb/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all scale-110">
+                        <img src="https://i.ibb.co/Q3FqNsjH/bogo-MTB.png" alt="Bogo MTB" class="h-8 md:h-10 w-auto object-contain opacity-100 drop-shadow-[0_0_12px_rgba(0,229,255,0.6)] transition-all" />
+                    </a>
+                    <!-- Otros de la familia -->
+                    <a href="https://bogochicas.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+                        <img src="https://i.ibb.co/qLYvYCrT/Logotipos-Eventos.png" alt="Bogochicas" class="h-8 md:h-10 w-auto object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
+                    </a>
+                    <a href="https://bogofija.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+                        <img src="https://i.ibb.co/99R1NsRX/Logo-Bogofija-2021.png" alt="Bogofija" class="h-8 md:h-10 w-auto object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+                    </a>
+                    <a href="https://bogoruta.netlify.app/" target="_blank" rel="noopener noreferrer" class="hover:opacity-100 transition-all">
+                        <img src="https://i.ibb.co/cK1KpZbK/bogoruta.png" alt="Bogoruta" class="h-8 md:h-10 w-auto object-contain opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
+                    </a>
+                </div>
+
+                <!-- Grupo WhatsApp BogoMTB -->
+                <div>
+                    <a href="https://chat.whatsapp.com/KHFufDawbr03tU3M0pg13H"
+                        target="_blank"
+                       rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2.5 px-6 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-black font-extrabold text-sm rounded-full transition-all transform hover:scale-105 shadow-lg shadow-[#25D366]/20">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                         <span>Grupo WhatsApp BogoMTB</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="#calculadora" class="reveal bg-gradient-to-r from-brand-cyan to-brand-blue text-black font-black px-7 py-3.5 rounded-full uppercase hover:brightness-110 transition-all transform hover:scale-105 active:scale-95 text-sm shadow-[0_0_20px_rgba(0,229,255,0.4)]" style="transition-delay: 350ms;">
+                Herramientas
+            </a>
+        </section>
+
+        <section id="calculadora" class="py-24 px-6 border-t border-zinc-900 bg-[#09090b] relative z-10 text-white">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-4 mb-16 reveal">
+                    <div class="inline-flex items-center px-4 py-1.5 mb-2 rounded-full bg-zinc-900 border border-brand-cyan/30 text-xs font-bold uppercase tracking-widest text-brand-cyan">
+                        <i class="fa-solid fa-calculator mr-2"></i> Herramienta BogoMTB
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-black uppercase tracking-tighter">Calculadora de <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue text-glow-cyan">Rendimiento</span></h2>
+                    <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+                        Ajusta la relación de transmisión de tu bicicleta. Selecciona un puerto para evaluar su compatibilidad con tu configuración, optimiza tu esfuerzo y mide tu avance por cada pedalada en la montaña.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Panel de controles -->
+                    <div class="lg:col-span-5 glass-card p-8 rounded-3xl relative overflow-hidden reveal">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand-blue/20 blur-2xl rounded-bl-full pointer-events-none"></div>
+
+                        <div class="space-y-8 relative z-10">
+                            <div class="space-y-3">
+                                <label for="port-selector" class="text-xs font-bold uppercase tracking-wider text-brand-cyan flex items-center">
+                                    <i class="fa-solid fa-map-location-dot mr-2"></i> 1. Selecciona tu Ruta
+                                </label>
+                                <div class="relative">
+                                    <select id="port-selector" onchange="updateCalculator()" class="w-full bg-zinc-900 border border-zinc-800 text-white text-sm rounded-xl focus:ring-2 focus:ring-brand-cyan focus:border-brand-cyan block p-4 pr-10 appearance-none cursor-pointer outline-none transition-all">
+                                        <option value="none">Ruta Libre (Sin puerto específico)</option>
+                                        <optgroup label="Cundinamarca">
+                                            <option value="romeral">Romeral (10 KM)</option>
+                                            <option value="lavega">La Vega al Vino (28 KM)</option>
+                                            <option value="patios">Patios desde Arepas (14 KM)</option>
+                                            <option value="sumapaz">Sumapaz (30 KM)</option>
+                                        </optgroup>
+                                        <optgroup label="Fuera de Cundinamarca">
+                                            <option value="letras">Alto de Letras (81 KM)</option>
+                                            <option value="sifon">Alto El Sifón (84 KM)</option>
+                                        </optgroup>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-brand-cyan">
+                                        <i class="fa-solid fa-chevron-down text-sm"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6 pt-6 border-t border-zinc-800/50">
+                                <p class="text-xs font-bold uppercase tracking-wider text-brand-cyan flex items-center">
+                                    <i class="fa-solid fa-gear mr-2"></i> 2. Configura tu Bici
+                                </p>
+
+                                <div class="space-y-3 bg-black/40 p-5 rounded-2xl border border-zinc-800/50">
+                                    <div class="flex justify-between items-end">
+                                        <label for="chainring" class="text-sm font-semibold text-zinc-300">Plato delantero</label>
+                                        <span id="chainring-val" class="text-3xl font-black text-white number-transition tracking-tighter">32T</span>
+                                    </div>
+                                    <input type="range" id="chainring" min="28" max="42" value="32" class="w-full" oninput="updateCalculator()">
+                                </div>
+
+                                <div class="space-y-3 bg-black/40 p-5 rounded-2xl border border-zinc-800/50">
+                                    <div class="flex justify-between items-end">
+                                        <label for="cog" class="text-sm font-semibold text-zinc-300">Piñón trasero (Pacha)</label>
+                                        <span id="cog-val" class="text-3xl font-black text-white number-transition tracking-tighter">50T</span>
+                                    </div>
+                                    <input type="range" id="cog" min="10" max="52" value="50" class="w-full" oninput="updateCalculator()">
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 pt-6 border-t border-zinc-800/50">
+                                <p class="text-xs font-bold uppercase tracking-wider text-brand-cyan flex items-center">
+                                    <i class="fa-solid fa-shoe-prints mr-2"></i> 3. Estilo de Frenado (Fija/Cross-training)
+                                </p>
+                                <div class="flex bg-black rounded-xl p-1.5 border border-zinc-800">
+                                    <button type="button" id="btn-single-skid" onclick="setAmbiMode(false)" class="flex-1 py-2.5 text-xs font-bold uppercase rounded-lg bg-zinc-800 text-white shadow transition-all">Un Pie</button>
+                                    <button type="button" id="btn-ambi-skid" onclick="setAmbiMode(true)" class="flex-1 py-2.5 text-xs font-bold uppercase rounded-lg text-zinc-500 hover:text-white transition-all bg-transparent">Ambidextro</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de resultados -->
+                    <div class="lg:col-span-7 flex flex-col gap-6 reveal" style="transition-delay: 200ms;">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div class="glass-card p-6 rounded-3xl flex flex-col justify-between transition-all group">
+                                <span class="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-line text-brand-cyan group-hover:scale-110 transition-transform"></i> Dureza de Relación
+                                </span>
+                                <div class="mt-4 flex items-end gap-2">
+                                    <span id="res-ratio" class="text-6xl font-black text-brand-cyan number-transition tracking-tighter">0.64</span>
+                                </div>
+                                <div class="mt-4 h-1.5 w-full bg-black rounded-full overflow-hidden">
+                                    <div id="ratio-bar" class="h-full bg-gradient-to-r from-brand-cyan to-brand-blue transition-all duration-500" style="width: 20%"></div>
+                                </div>
+                                <p id="ratio-feedback" class="text-xs text-zinc-400 mt-3 font-medium">Relación MTB perfecta para pendientes fuertes.</p>
+                            </div>
+
+                            <div class="glass-card p-6 rounded-3xl flex flex-col justify-between transition-all group">
+                                <span class="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
+                                    <i class="fa-solid fa-ruler-horizontal text-brand-blue group-hover:scale-110 transition-transform"></i> Avance por Pedalada
+                                </span>
+                                <div class="mt-4 flex items-end gap-2">
+                                    <span id="res-dev" class="text-6xl font-black text-white number-transition tracking-tighter">1.49</span>
+                                    <span class="text-sm text-zinc-500 mb-2 font-mono font-bold">m</span>
+                                </div>
+                                <p class="text-xs text-zinc-400 mt-auto pt-4 font-medium">Metros avanzados por revolución (Llanta 29er aprox).</p>
+                            </div>
+                        </div>
+
+                        <!-- Skid Patches adaptado para BogoMTB (estético) -->
+                        <div class="glass-card p-6 sm:p-8 rounded-3xl flex-1 flex flex-col sm:flex-row items-center gap-8 transition overflow-hidden relative border border-brand-cyan/20 bg-brand-cyan/5">
+                            <div class="flex-1 space-y-2 z-10 w-full text-center sm:text-left">
+                                <div class="inline-flex items-center gap-2 px-2.5 py-1 bg-black rounded border border-zinc-800 mb-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-brand-cyan animate-pulse"></span>
+                                    <span class="text-[10px] font-bold tracking-widest text-zinc-400 uppercase">Análisis de Llanta</span>
+                                </div>
+                                <h4 class="text-3xl font-black uppercase tracking-tight">Puntos Derrape: <span id="res-skids" class="text-brand-cyan number-transition">25</span></h4>
+                                <p class="text-sm text-zinc-400 leading-relaxed max-w-sm mx-auto sm:mx-0">
+                                    Puntos donde la llanta rozará al bloquear la rueda (referencia cruzada fija). <br>
+                                    <span id="skid-warning" class="text-brand-blue font-bold mt-1 block">Excelente distribución.</span>
+                                </p>
+                            </div>
+                            
+                            <div class="relative w-40 h-40 flex-shrink-0 z-10 mx-auto">
+                                <svg class="absolute inset-0 w-full h-full transform -rotate-90 drop-shadow-[0_0_12px_rgba(0,229,255,0.3)]" id="skid-diagram-svg"></svg>
+                                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                    <i class="fa-solid fa-bicycle text-2xl text-zinc-800 opacity-60"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recomendación de Puerto Dinámica -->
+                        <div id="port-recommendation" class="hidden bg-cyan-500/10 border border-cyan-500/30 p-5 rounded-2xl items-start gap-4 transition-all">
+                            <div class="bg-brand-cyan p-2.5 rounded-xl text-black shadow-lg shadow-cyan-500/20">
+                                <i class="fa-solid fa-lightbulb text-lg"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-black text-white uppercase tracking-wide" id="rec-title">Tips de Ruta</h5>
+                                <p class="text-sm text-zinc-300 mt-1 leading-relaxed" id="rec-text">Selecciona una ruta para ver consejos adaptados.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reto-vol2" class="py-24 px-4 sm:px-6 lg:px-8 bg-[#000000] relative border-t border-zinc-900 min-h-screen flex items-center">
+            <!-- Detalles de fondo -->
+            <div class="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-brand-blue/5 to-transparent pointer-events-none"></div>
+
+            <div class="max-w-4xl mx-auto relative z-10 w-full">
+                <div class="text-center mb-16 reveal">
+                    <div class="inline-flex items-center px-4 py-1 rounded-full bg-zinc-900 border border-brand-cyan/30 text-[10px] font-bold uppercase tracking-widest text-brand-cyan mb-4 shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                        <i class="fa-solid fa-trophy mr-2"></i> Salón de la Fama
+                    </div>
+                    <h2 class="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tighter text-white">
+                        Resultados Oficiales <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue">MTB 2026</span>
+                    </h2>
+                    <p class="text-zinc-400 text-sm max-w-xl mx-auto font-medium leading-relaxed">
+                        Honor a los y las riders que dominaron las trochas y montañas en nuestra última edición. Fuerza, constancia y pasión por el MTB.
+                    </p>
+                </div>
+
+                <div class="relative reveal" style="transition-delay: 100ms;">
+                    <!-- Contenedor único para la categoría MTB Libre (centrado) -->
+                    <div id="col-mtb" class="max-w-xl mx-auto"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 px-6 bg-gradient-to-r from-brand-cyan to-brand-blue text-black text-center relative z-10 overflow-hidden">
+            <div class="relative z-10 reveal">
+                <h2 class="text-4xl md:text-6xl font-black mb-6 uppercase tracking-tighter drop-shadow-lg">Únete a la Manada</h2>
+                <p class="text-lg mb-10 max-w-xl mx-auto opacity-90 drop-shadow-sm font-semibold">Conéctate con más riders apasionados por la bicicleta, entérate de nuestros entrenamientos y próximos eventos en la montaña.</p>
+                <a href="https://www.instagram.com/bogomtb/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 bg-black text-white px-8 py-4 rounded-full font-black text-lg hover:bg-zinc-800 transition-all transform hover:scale-105 hover:-translate-y-1 shadow-2xl">
+                    <i class="fa-brands fa-instagram text-2xl text-brand-cyan"></i> @BOGOMTB
+                </a>
+            </div>
+            <!-- Decals bg -->
+            <i class="fa-solid fa-mountain absolute -left-10 -bottom-10 text-[250px] text-black/10 -rotate-12 pointer-events-none"></i>
+        </section>
+
+    </main>
+
+    <footer class="py-12 px-6 bg-black border-t border-zinc-900 text-center relative z-10">
+        
+        <div class="flex justify-center mb-8">
+             <img src="https://i.ibb.co/Q3FqNsjH/bogo-MTB.png" alt="Logo BogoMTB" loading="lazy" class="h-14 w-auto object-contain opacity-80">
+        </div>
+        
+        <!-- Ubicación y Correo -->
+        <p class="text-zinc-500 text-sm mb-2 font-medium">Bogotá, Colombia</p>
+        <a href="mailto:bogopublica@gmail.com" class="text-zinc-300 hover:text-brand-cyan font-bold block mb-8 transition-colors">bogopublica@gmail.com</a>
+        
+        <!-- REDES SOCIALES -->
+        <div class="flex justify-center items-center gap-6 mb-8">
+            <a href="https://www.tiktok.com/@bogofija" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-cyan text-xl transition-colors" aria-label="TikTok">
+                <i class="fa-brands fa-tiktok"></i>
+            </a>
+            <a href="https://www.strava.com/clubs/bogomtb" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-cyan text-xl transition-colors" aria-label="Strava">
+                <i class="fa-brands fa-strava"></i>
+            </a>
+            <a href="https://www.instagram.com/bogomtb/" target="_blank" rel="noopener noreferrer" class="text-zinc-600 hover:text-brand-cyan text-xl transition-colors" aria-label="Instagram">
+                <i class="fa-brands fa-instagram"></i>
+            </a>
+        </div>
+        
+        <!-- Copyright y créditos -->
+        <div class="pt-8 border-t border-zinc-900 max-w-xl mx-auto space-y-2">
+            <p class="text-zinc-500 text-[11px] font-bold tracking-widest uppercase">&copy;2026 BOGOMTB · Todos los derechos reservados.</p>
+            <p class="text-zinc-500 text-xs">
+                Diseñado y desarrollado por
+                <a href="https://sneyder.netlify.app" target="_blank" rel="noopener noreferrer" class="font-bold text-[#E65C13] hover:underline underline-offset-4">Art Sneyder</a>
+                · 2022
+            </p>
+            <!-- Volver a ver la intro (recarga la página con ?intro) -->
+            <a href="?intro" class="inline-flex items-center gap-2 pt-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-brand-cyan transition-colors">
+                <i class="fa-solid fa-play text-[8px]"></i> Ver intro
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. ANIMACIONES SCROLL ---
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        let revealStarted = false;
+        function initReveal() {
+            if (revealStarted) return;
+            revealStarted = true;
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar vistas
+            updateCalculator();
+            renderSalonFamaMTB();
+            initMobileMenu();
+
+            // Las animaciones de entrada esperan a que termine la intro (si no, se reproducen ocultas detrás)
+            const intro = document.getElementById('bmb');
+            if (!intro || intro.classList.contains('gone')) {
+                initReveal();
+            } else {
+                document.addEventListener('bogomtb:intro-end', initReveal, { once: true });
+                setTimeout(initReveal, 8000); // respaldo
+            }
+        });
+
+        // --- MENÚ MÓVIL ---
+        function initMobileMenu() {
+            const btn = document.getElementById('menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            if (!btn || !menu) return;
+            const icon = btn.querySelector('i');
+
+            const setOpen = (open) => {
+                menu.classList.toggle('hidden', !open);
+                btn.setAttribute('aria-expanded', String(open));
+                btn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+                icon.className = (open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars') + ' text-xl';
+            };
+
+            btn.addEventListener('click', () => setOpen(menu.classList.contains('hidden')));
+            menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setOpen(false)));
+            window.addEventListener('resize', () => { if (window.innerWidth >= 768) setOpen(false); });
+        }
+
+        // --- 2. LÓGICA CALCULADORA DE RENDIMIENTO ---
+        let isAmbi = false;
+
+        function gcd(a, b) {
+            return b ? gcd(b, a % b) : a;
+        }
+
+        function animateNumber(elementId, newValue) {
+            const el = document.getElementById(elementId);
+            if(el && el.innerText !== newValue.toString()) {
+                el.classList.add('scale-110');
+                el.innerText = newValue;
+                setTimeout(() => {
+                    el.classList.remove('scale-110');
+                }, 300);
+            }
+        }
+
+        function updateCalculator() {
+            const chainringEl = document.getElementById('chainring');
+            const cogEl = document.getElementById('cog');
+            const portSelector = document.getElementById('port-selector');
+            
+            if(!chainringEl || !cogEl || !portSelector) return;
+
+            const chainring = parseInt(chainringEl.value);
+            const cog = parseInt(cogEl.value);
+            const portId = portSelector.value;
+            
+            document.getElementById('chainring-val').innerText = chainring + "T";
+            document.getElementById('cog-val').innerText = cog + "T";
+            
+            // Cálculo Ratio (número real; solo se redondea para mostrar)
+            const ratio = chainring / cog;
+            animateNumber('res-ratio', ratio.toFixed(2));
+            
+            // Barra Visual (Cyan/Blue adaptada para MTB, ratios más bajos normalmente)
+            const minRatio = 0.5; 
+            const maxRatio = 4.0; 
+            let ratioPercent = ((ratio - minRatio) / (maxRatio - minRatio)) * 100;
+            ratioPercent = Math.max(0, Math.min(100, ratioPercent));
+            document.getElementById('ratio-bar').style.width = ratioPercent + '%';
+
+            // Retroalimentación MTB
+            let feedback = "";
+            if(ratio < 0.8) feedback = "Relación ultra blanda (Molinillo). Ideal para subir paredes técnicas en trocha.";
+            else if(ratio < 1.5) feedback = "Excelente para montaña y ascensos técnicos prolongados.";
+            else if(ratio < 2.5) feedback = "Relación versátil. Buen equilibrio para XC y rodar.";
+            else if(ratio < 3.2) feedback = "Relación dura. Exige potencia pura, ideal para planos o descensos rápidos.";
+            else feedback = "Muy dura. Ideal solo para bajadas o asfalto a fondo.";
+            document.getElementById('ratio-feedback').innerText = feedback;
+
+            // Desarrollo (Rueda estándar 29x2.20 aprox)
+            const development = (ratio * 2.32).toFixed(2); 
+            animateNumber('res-dev', development);
+            
+            // Skid Patches (Funcionalidad heredada)
+            const g = gcd(chainring, cog);
+            let skidPatches = cog / g;
+            if (isAmbi && ((chainring / g) % 2 !== 0)) {
+                skidPatches *= 2;
+            }
+            
+            animateNumber('res-skids', skidPatches);
+            
+            const warningEl = document.getElementById('skid-warning');
+            if(warningEl) {
+                if (skidPatches <= 2) {
+                    warningEl.innerText = "Cuidado. Desgaste en muy pocos puntos.";
+                    warningEl.className = "text-red-500 font-bold mt-1 block";
+                } else if (skidPatches <= 6) {
+                    warningEl.innerText = "Desgaste moderado. Rota la llanta seguido.";
+                    warningEl.className = "text-orange-400 font-medium mt-1 block";
+                } else {
+                    warningEl.innerText = "Excelente distribución del frenado.";
+                    warningEl.className = "text-brand-blue font-bold mt-1 block";
+                }
+            }
+
+            renderSkidSVG(skidPatches);
+            updatePortRecommendation(portId, ratio);
+        }
+
+        function setAmbiMode(mode) {
+            isAmbi = mode;
+            const btnSingle = document.getElementById('btn-single-skid');
+            const btnAmbi = document.getElementById('btn-ambi-skid');
+            
+            if(!btnSingle || !btnAmbi) return;
+
+            if (isAmbi) {
+                btnAmbi.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg bg-zinc-800 text-white shadow transition-all";
+                btnSingle.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg text-zinc-500 hover:text-white transition-all bg-transparent";
+            } else {
+                btnSingle.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg bg-zinc-800 text-white shadow transition-all";
+                btnAmbi.className = "flex-1 py-2.5 text-xs font-bold uppercase rounded-lg text-zinc-500 hover:text-white transition-all bg-transparent";
+            }
+            updateCalculator();
+        }
+
+        function renderSkidSVG(patches) {
+            const svg = document.getElementById('skid-diagram-svg');
+            if(!svg) return;
+            svg.innerHTML = ''; 
+            
+            const baseCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            baseCircle.setAttribute("cx", "80");
+            baseCircle.setAttribute("cy", "80");
+            baseCircle.setAttribute("r", "70");
+            baseCircle.setAttribute("fill", "none");
+            baseCircle.setAttribute("stroke", "#27272a"); 
+            baseCircle.setAttribute("stroke-width", "4");
+            svg.appendChild(baseCircle);
+            
+            const radius = 70;
+            const centerX = 80;
+            const centerY = 80;
+            const drawPatches = Math.min(patches, 100); 
+
+            for (let i = 0; i < drawPatches; i++) {
+                const angle = (i * 2 * Math.PI) / drawPatches;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                dot.setAttribute("cx", x);
+                dot.setAttribute("cy", y);
+                dot.setAttribute("r", "6");
+                dot.setAttribute("fill", "#00E5FF"); // brand-cyan
+                
+                const innerDot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                innerDot.setAttribute("cx", x);
+                innerDot.setAttribute("cy", y);
+                innerDot.setAttribute("r", "2");
+                innerDot.setAttribute("fill", "#000000");
+                
+                svg.appendChild(dot);
+                svg.appendChild(innerDot);
+            }
+        }
+
+        function updatePortRecommendation(portId, ratio) {
+            const recContainer = document.getElementById('port-recommendation');
+            const recTitle = document.getElementById('rec-title');
+            const recText = document.getElementById('rec-text');
+            if(!recContainer || !recTitle || !recText) return;
+
+            const iconContainer = recContainer.querySelector('div:first-child');
+            const iconEl = recContainer.querySelector('i');
+
+            if (portId === 'none') {
+                recContainer.classList.add('hidden');
+                recContainer.classList.remove('flex');
+                return;
+            }
+
+            recContainer.classList.remove('hidden');
+            recContainer.classList.add('flex');
+
+            let title = "";
+            let text = "";
+            let isWarning = false;
+
+            switch(portId) {
+                case 'romeral':
+                    title = "Tips MTB: Romeral (El Muro)";
+                    if (ratio > 1.2) { text = "Mucha dureza para las rampas de Romeral (18%). Te recomendamos bajar a un plato 30T o piñón 50T para cuidar las rodillas."; isWarning = true; }
+                    else text = "Relación ideal. Mantén cadencia constante y controla la tracción de la llanta trasera en la grava.";
+                    break;
+                case 'lavega':
+                    title = "Tips MTB: La Vega al Vino";
+                    if (ratio < 1.0) { text = "Quizá vayas muy 'molinillo' en los falsos planos. Prueba acercarte a 1.5 para rodar mejor."; isWarning = true; }
+                    else text = "Perfecto para esta ruta de resistencia (28km). ¡A mantener el ritmo!";
+                    break;
+                case 'patios':
+                    title = "Tips MTB: Patios (Por trocha)";
+                    if (ratio > 1.5) { text = "Para escalar Patios por terreno destapado, una relación superior a 1.5 exige muchísima fuerza. Si te sientes fuerte, ¡dale!"; isWarning = false; }
+                    else text = "Ratio clásico, perfecto para encontrar tu ritmo hasta la cima esquivando rocas.";
+                    break;
+                case 'sumapaz':
+                    title = "Tips MTB: Sumapaz";
+                    text = "Largo aliento (30km). Prioriza ir cómodos y guarden energía para el barro y el viento del páramo. ¡Lleva buen cortavientos!";
+                    break;
+                case 'letras':
+                    title = "Tips MTB: Letras (81km)";
+                    if (ratio > 1.2) { text = "Ojo riders: Son +5 horas de ascenso continuo. Una relación suave protegerá tus piernas y articulaciones en la altitud."; isWarning = true; }
+                    else text = "Ratio de supervivencia perfecto. Aliméntate bien y a conquistar el mito.";
+                    break;
+                case 'sifon':
+                    title = "Tips MTB: El Sifón";
+                    text = "La altura y el terreno suelto castigan fuerte. Relación ultra suave y llantas con buen labrado son tus mejores aliados aquí.";
+                    break;
+            }
+
+            recTitle.innerText = title;
+            recText.innerText = text;
+
+            if(isWarning) {
+                recContainer.className = "flex bg-orange-500/10 border border-orange-500/30 p-5 rounded-2xl items-start gap-4 transition-all";
+                iconContainer.className = "bg-orange-500 p-2.5 rounded-xl text-black shadow-lg shadow-orange-500/20";
+                iconEl.className = "fa-solid fa-triangle-exclamation text-lg text-white";
+            } else {
+                recContainer.className = "flex bg-brand-cyan/10 border border-brand-cyan/30 p-5 rounded-2xl items-start gap-4 transition-all";
+                iconContainer.className = "bg-brand-cyan p-2.5 rounded-xl text-black shadow-lg shadow-cyan-500/20";
+                iconEl.className = "fa-solid fa-lightbulb text-lg";
+            }
+        }
+
+        // --- 3. LÓGICA SALÓN DE LA FAMA (CATEGORÍA MTB) ---
+        const salonMTBData = [
+            { name: 'Angie Castro', points: 105, trips: 6 },
+            { name: 'Andre Hernandez', points: 84, trips: 4 },
+            { name: 'Paola Ruiz', points: 64, trips: 3 },
+            { name: 'Sara Medina', points: 20, trips: 3 },
+            { name: 'Yenny Semiyarte', points: 20, trips: 3 }
+        ];
+
+        function renderSalonFamaMTB() {
+            const container = document.getElementById('col-mtb');
+            
+            let html = `
+                <div class="glass-card rounded-3xl p-8 flex flex-col relative overflow-hidden group shadow-[0_0_40px_rgba(0,229,255,0.1)] border-t border-brand-cyan/30">
+                    <i class="fa-solid fa-mountain-sun absolute -right-6 -top-6 text-[120px] text-brand-cyan/5 group-hover:scale-110 transition-transform duration-700"></i>
+                    <h3 class="text-2xl font-black mb-8 text-white uppercase flex items-center justify-center border-b border-white/10 pb-4 tracking-widest">
+                        Categoría Abierta MTB
+                    </h3>
+                    <div class="space-y-4">
+            `;
+
+            salonMTBData.forEach((p, idx) => {
+                const pos = idx + 1;
+                const isFirst = pos === 1;
+                const isSecond = pos === 2;
+                const isThird = pos === 3;
+                
+                const rankClass = isFirst ? 'legacy-rank-1' : isSecond ? 'legacy-rank-2' : isThird ? 'legacy-rank-3' : 'bg-white/5 border-l-[3px] border-transparent';
+                const icon = isFirst ? '👑' : isSecond ? '🥈' : isThird ? '🥉' : `<span class="text-sm font-bold text-zinc-500">#${pos}</span>`;
+                const nameColor = isFirst ? 'text-brand-cyan font-black text-lg' : isSecond ? 'text-zinc-200 font-bold' : isThird ? 'text-brand-blue font-bold' : 'text-zinc-400 font-medium';
+                const pointsColor = isFirst ? 'text-brand-cyan' : isThird ? 'text-brand-blue' : 'text-white';
+
+                html += `
+                    <div class="flex items-center justify-between p-4 rounded-r-2xl ${rankClass} hover:bg-white/10 transition-colors transform hover:translate-x-2 duration-300">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 text-center text-xl flex justify-center items-center">${icon}</div>
+                            <div>
+                                <h4 class="uppercase ${nameColor} tracking-wide">${p.name}</h4>
+                                <div class="text-[10px] text-zinc-500 uppercase tracking-widest mt-1 font-semibold">
+                                    <i class="fa-solid fa-route text-brand-cyan/60 mr-1"></i>${p.trips} Rutas Completadas
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-black ${pointsColor} drop-shadow-md">${p.points}</div>
+                            <div class="text-[9px] uppercase text-zinc-500 font-bold tracking-widest">Puntos</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
